@@ -1,0 +1,28 @@
+# 데이터와 실행 결과는 저장소에 올리지 않는다 (CLAUDE.md 규칙 1)
+data/
+runs/
+outputs/
+cache/
+*.jpg
+*.jpeg
+*.png
+*.pdf
+*.jsonl
+
+# 비밀값
+.env
+.env.*
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv*/
+.pytest_cache/
+
+# 편집기·OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
