@@ -14,6 +14,7 @@ from importlib import resources
 
 from ocr_harness.common.ids import prefixed_id
 from ocr_harness.common.ledger import Ledger
+from ocr_harness.common.model_route import PriceTable
 from ocr_harness.common.otlp import Telemetry
 from ocr_harness.common.profile import Profile
 from ocr_harness.common.repo_guard import AllowedFolderRule, ContentPatternRule, EmailRule, RepoGuard, SuffixRule
@@ -86,6 +87,26 @@ logger = TELEMETRY.logger        # logger(provider, version)
 LEDGER = Ledger(PROFILE)
 # 재시도, 보조 모델 호출, 실패한 호출도 각각 한 행입니다 (CLAUDE.md 규칙 7, 8).
 model_calls = LEDGER.model_calls
+
+# 모델 가격표 ---------------------------------------------------------------
+# 100만 토큰당 달러. 입력·출력·캐시 읽기는 Anthropic 공개 가격(2026-11-03 기준으로 받은 표)이고,
+# 캐시 쓰기는 "입력의 1.25배(5분 보존)" 규칙으로 계산한 값입니다. SDK가 1시간 보존을 쓰면 실제는 더 높습니다.
+# Haiku의 캐시 읽기 가격은 확인하지 못해 "입력의 0.1배" 규칙으로 적었습니다.
+PRICES = PriceTable("2026.11.03", {
+    "claude-sonnet-5-5": {"input": 2.0, "output": 10.0, "cache_read": 0.10, "cache_write": 2.5},
+    "claude-haiku-5-5": {"input": 0.10, "output": 0.50, "cache_read": 0.01, "cache_write": 0.125},
+})
+# OCR 단계에서 이미지를 읽히는 모델과 지시문. 바꾸면 OCR 엔진이 달라지는 것이므로 결과 캐시도 따로 둬야 합니다.
+VISION_OCR_MODEL = "claude-sonnet-5-5"
+VISION_OCR_PROMPT = (
+    "이 이미지에 인쇄된 글자를 보이는 그대로 모두 옮겨 적어 주세요.\n"
+    "- 한 줄에 글자 한 줄씩, 위에서 아래로, 왼쪽에서 오른쪽 순서로 적습니다.\n"
+    "- 고치거나 추측해서 채우지 않습니다. 오타처럼 보여도 인쇄된 대로 적고, 읽을 수 없는 글자는 건너뜁니다.\n"
+    "- 설명, 머리말, 번호, 따옴표, 코드 블록 없이 옮겨 적은 글자만 출력합니다."
+)
+# 보내기 전에 줄이는 긴 변의 크기(px). 1568은 Anthropic 문서가 권하던 긴 변 기준으로 기억하는 값이고,
+# 이 모델에서 가장 좋은 크기인지는 확인하지 않았습니다. 바꿔 가며 비교할 수 있게 설정으로 둡니다.
+VISION_OCR_MAX_SIDE = 1568
 
 # id ----------------------------------------------------------------------
 
