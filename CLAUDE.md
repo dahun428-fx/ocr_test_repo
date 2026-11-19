@@ -15,6 +15,7 @@
 | [docs/TODO.md](docs/TODO.md) | 지금 할 일과 사용자 확인 대기 항목 |
 | [docs/HISTORY.md](docs/HISTORY.md) | 결정과 변경 기록 |
 | [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 v2 (기록 8종, 플랫폼 계약 0.2.0·OTel 대응, 구현 완료) |
+| [docs/schema-standards-review.md](docs/schema-standards-review.md) | 스키마 표준 대조와 수정안 (스키마 2.0.0 제안, 확인 대기) |
 | [docs/m1a-results.md](docs/m1a-results.md) | M1a 탐색 결과 (집계 숫자) |
 
 ## 반드시 지킬 규칙

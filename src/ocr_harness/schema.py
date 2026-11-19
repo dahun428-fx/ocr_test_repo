@@ -9,8 +9,11 @@ from importlib import resources
 
 from jsonschema import Draft202012Validator
 
+# 이 저장소가 정의하는 스키마 묶음의 버전. 스키마를 바꾸면 올리고 released 스냅샷을 추가합니다.
 SCHEMA_VERSION = "1.0.0"
+# 사본으로 가져온 플랫폼 계약의 버전.
 PLATFORM_CONTRACT_VERSION = "0.2.0"
+# 이 저장소가 정의하는 기록: 종류 이름 → 스키마 파일 이름.
 OWN = {
     "item": "item",
     "conditionManifest": "condition-manifest",
@@ -19,6 +22,7 @@ OWN = {
     "modelCall": "model-call",
     "fieldScore": "field-score",
 }
+# validate()가 받는 종류 전체. 뒤의 둘은 플랫폼 계약입니다.
 KINDS = (*OWN, "knowledgeDocument", "evaluation")
 
 
@@ -27,11 +31,13 @@ class SchemaError(ValueError):
 
 
 def _load(relative: str) -> dict:
+    """패키지에 들어 있는 스키마 JSON 파일을 읽습니다 (설치된 뒤에도 같은 경로로 읽힙니다)."""
     return json.loads(resources.files("ocr_harness").joinpath(f"schemas/{relative}").read_text("utf-8"))
 
 
 @cache
 def _schema(kind: str) -> dict:
+    """종류 이름에 해당하는 JSON Schema. 모르는 종류면 KeyError."""
     if kind in OWN:
         return _load(f"{OWN[kind]}.schema.json")
     platform = f"platform/{PLATFORM_CONTRACT_VERSION}"
@@ -43,6 +49,7 @@ def _schema(kind: str) -> dict:
     raise KeyError(kind)
 
 
+# 검증기를 만드는 비용이 있어 종류별로 한 번만 만들어 둡니다.
 @cache
 def _validator(kind: str) -> Draft202012Validator:
     return Draft202012Validator(_schema(kind))
@@ -59,6 +66,7 @@ def bundle() -> dict:
 
 def validate(kind: str, record: dict) -> None:
     """맞지 않으면 모든 위반 내용을 담아 SchemaError를 냅니다."""
+    # 첫 오류에서 멈추지 않고 전부 모읍니다. 위치(경로) 순으로 정렬해 메시지가 매번 같게 합니다.
     errors = sorted(_validator(kind).iter_errors(record), key=lambda e: [str(p) for p in e.path])
     if errors:
         detail = "; ".join(f"{'/'.join(map(str, e.path)) or '(root)'}: {e.message}" for e in errors)

@@ -5,6 +5,7 @@
 ## 사용자 확인 대기
 
 - [x] 스키마 v2 ([schema-design.md](schema-design.md)) 확정과 구현 (기록 8종, 스키마 버전 1.0.0)
+- [ ] 스키마 표준 대조 수정안 ([schema-standards-review.md](schema-standards-review.md)) 확인. 채택하면 스키마 2.0.0으로 구현
 - [ ] M1a 결과 확인과 M1b(수집기) 착수 확정
 - [ ] 데이터 이용약관이 외부 모델 전송을 허용하는지 확인 (M3 선행 조건)
 - [ ] 데이터 공식 설명서 확보 (라벨 유형 코드 정의)
