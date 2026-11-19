@@ -72,7 +72,7 @@
 ```json
 {"resourceSpans":[{
   "resource":{"attributes":[{"key":"service.name","value":{"stringValue":"ocr-harness"}}, …]},
-  "scopeSpans":[{"scope":{"name":"ocr_harness","version":"0.1.0"},
+  "scopeSpans":[{"scope":{"name":"ocr_harness"},
     "spans":[{"traceId":"…32자리","spanId":"…16자리","parentSpanId":"…","name":"chat claude-sonnet",
               "kind":1,"startTimeUnixNano":"1795050000000000000","endTimeUnixNano":"1795050001000000000",
               "attributes":[{"key":"gen_ai.usage.input_tokens","value":{"intValue":"250"}}, …],
@@ -96,7 +96,9 @@ span 종류 (`name`의 첫 단어)와 필수 속성:
 | `chat {모델}` | **모델 호출 1회** (재시도, 보조 모델도 각각) | `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `ocr.prompt.digest`, `ocr.model.role`(main/auxiliary), `ocr.model.auth_route`, `ocr.model.attempt`, `platform.model.provider`, `platform.route_decision.id`, `ocr.usage.hidden_context_tokens`, `ocr.cost.price_table.version` |
 | `postprocess` | 후처리 | `platform.guardrail.mode`(check_only/enforce), `ocr.postprocess.kind`, `ocr.postprocess.rules`, `ocr.output.before.digest`, `ocr.output.after.digest` |
 
-chat span의 선택 속성: `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.reasoning.output_tokens`, `gen_ai.input.messages_ref`, `gen_ai.output.messages_ref`, `ocr.cost.sdk_reported_usd`, `ocr.cost.computed_usd`, `ocr.cost.basis`, `ocr.sdk.num_turns`, `ocr.sdk.duration_api_ms`.
+chat span의 선택 속성: `gen_ai.system_instructions_ref`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.reasoning.output_tokens`, `gen_ai.input.messages_ref`, `gen_ai.output.messages_ref`, `ocr.cost.sdk_reported_usd`, `ocr.cost.computed_usd`, `ocr.cost.basis`, `ocr.sdk.num_turns`, `ocr.sdk.duration_api_ms`. 그 밖의 선택 속성은 원문 참조인 `ocr.output.ref`(ocr span)와 `ocr.retrieval.query.ref`(retrieval span)입니다.
+
+`history` span은 M8에서 쓸 자리만 정의했습니다. SDK로 만든 기록이 스키마를 통과하는지 확인한 것은 나머지 6종입니다.
 
 선행 연구 기록과의 대응: SDK 결과 1건의 `sdk.model_usage`에는 모델별 항목이 있습니다(주 모델과 보조 Haiku). 모델 하나당 chat span 하나로 풀어 적고 `ocr.model.role`로 구분합니다. `cacheCreationInputTokens`는 `gen_ai.usage.cache_write.input_tokens`, `costUSD`는 `ocr.cost.sdk_reported_usd`, `costBasis`는 `ocr.cost.basis`가 됩니다. 실패한 호출도 span을 남기고 토큰을 0으로 적습니다.
 
@@ -116,11 +118,11 @@ chat span의 선택 속성: `gen_ai.response.model`, `gen_ai.response.finish_rea
 | `ocr.query.type`(A/B/C), `ocr.ocr_misread` | ○ | 자체. 주 지표의 분모 표시 |
 | `ocr.score.stage`(before_postprocess/after_postprocess) | ● | 자체 |
 
-OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 섞일 수 있어 받지 않습니다.
+채점 자체가 실패하면 `error.type`(플랫폼 오류 코드)을 적습니다. OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 섞일 수 있어 받지 않습니다.
 
 ## 7. rawPayload, evaluation, knowledgeDocument
 
-**rawPayload**: `runId`, `traceId`, `spanId`, `digest`, `kind`, `content`, `retention`. `kind`가 `input_messages`, `output_messages`이면 `content`는 OTel 메시지 JSON 스키마(메시지마다 `role`과 `parts[]`)를 따르고, `ocr_output`, `retrieval_query`, `postprocess_output`이면 글자열입니다. `digest`는 글자열이면 UTF-8 바이트의, 구조가 있으면 RFC 8785 정규화 JSON의 SHA-256입니다. 저장소에 올리지 않습니다.
+**rawPayload**: `schemaVersion`, `recordType`, `runId`, `traceId`, `spanId`, `digest`, `kind`, `content`, `retention`. `kind`가 `input_messages`, `output_messages`이면 `content`는 OTel 메시지 JSON 스키마(메시지마다 `role`과 `parts[]`)를 따르고, `ocr_output`, `retrieval_query`, `postprocess_output`이면 글자열입니다. `digest`는 글자열이면 UTF-8 바이트의, 구조가 있으면 RFC 8785 정규화 JSON의 SHA-256입니다. 저장소에 올리지 않습니다.
 
 **evaluation**: 플랫폼 계약 그대로 (`evaluationId`, `datasetVersion`, `agentVersion`, `manifestDigest`, `policyVersion`, `metric`, `score`, `threshold`, `passed`, `traceId`). 조건 × 지표의 집계 한 줄이고 EDD 관문의 판정 기록입니다. 신뢰구간, 표본 수, p값은 이 계약에 자리가 없어 별도 통계 리포트에 두고 `evaluationId`로 연결합니다.
 
@@ -163,7 +165,7 @@ OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 �
 스키마를 바꾸는 절차:
 
 1. 실패하는 테스트를 먼저 씁니다.
-2. `tools/build_schemas.py`의 표를 고치고, `SCHEMA_VERSION`(`schema.py`, `otlp.py`, 스크립트의 상수)을 올립니다. 속성을 더하기만 하면 minor, 뜻이나 형식을 바꾸면 major입니다.
+2. `tools/build_schemas.py`의 표를 고치고, `schema.py`의 `SCHEMA_VERSION`을 올립니다 (상수는 이 한 곳에만 있고 `otlp.py`와 스크립트가 가져다 씁니다). 속성을 더하기만 하면 minor, 뜻이나 형식을 바꾸면 major입니다.
 3. `python tools/build_schemas.py --release`로 스키마 파일과 새 스냅샷을 씁니다.
 4. `docs/HISTORY.md`에 이유를 적습니다.
 
