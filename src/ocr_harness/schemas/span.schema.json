@@ -1,0 +1,539 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "span",
+  "description": "실행 단계 1개(OTel span). 원문은 넣지 않고 해시와 참조만 둡니다.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "recordType": {
+      "const": "span"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$"
+    },
+    "parentSpanId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^(invoke_agent|ocr|retrieval|context|history|chat|postprocess)( [^ ]+)?$"
+    },
+    "startTime": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "endTime": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "error"
+      ]
+    },
+    "errorCode": {
+      "enum": [
+        "UNAUTHENTICATED",
+        "FORBIDDEN",
+        "VALIDATION_ERROR",
+        "NOT_FOUND",
+        "CONFLICT",
+        "NOT_IMPLEMENTED",
+        "UPSTREAM_UNAVAILABLE",
+        "UPSTREAM_TIMEOUT",
+        "UPSTREAM_ERROR",
+        "RATE_LIMITED"
+      ]
+    },
+    "attributes": {
+      "type": "object",
+      "properties": {
+        "gen_ai.operation.name": {
+          "enum": [
+            "invoke_agent",
+            "retrieval",
+            "chat"
+          ]
+        },
+        "gen_ai.agent.name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gen_ai.agent.version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "gen_ai.provider.name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gen_ai.request.model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gen_ai.response.model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gen_ai.input.messages_ref": {
+          "type": "string",
+          "pattern": "^raw://sha256:[a-f0-9]{64}$"
+        },
+        "gen_ai.output.messages_ref": {
+          "type": "string",
+          "pattern": "^raw://sha256:[a-f0-9]{64}$"
+        },
+        "gen_ai.system_instructions_ref": {
+          "type": "string",
+          "pattern": "^raw://sha256:[a-f0-9]{64}$"
+        },
+        "gen_ai.data_source.id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "gen_ai.retrieval.top_k": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "gen_ai.retrieval.documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              },
+              "score": {
+                "type": "number"
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "selected": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "score",
+              "rank",
+              "selected"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "platform.idempotency_key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "platform.guardrail.mode": {
+          "enum": [
+            "check_only",
+            "enforce"
+          ]
+        },
+        "ocr.item.id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "ocr.condition.id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "ocr.manifest.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "ocr.dataset.version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "ocr.repeat": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ocr.outcome": {
+          "enum": [
+            "ok",
+            "refused",
+            "empty",
+            "error"
+          ]
+        },
+        "ocr.engine.name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ocr.engine.version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ocr.output.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "ocr.output.ref": {
+          "type": "string",
+          "pattern": "^raw://sha256:[a-f0-9]{64}$"
+        },
+        "ocr.cache.hit": {
+          "type": "boolean"
+        },
+        "ocr.retrieval.query.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "ocr.retrieval.query.ref": {
+          "type": "string",
+          "pattern": "^raw://sha256:[a-f0-9]{64}$"
+        },
+        "ocr.context.template.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "ocr.context.order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          }
+        },
+        "ocr.context.tokens": {
+          "type": "object",
+          "properties": {
+            "instruction": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ocr": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "documents": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "history": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "image": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "instruction",
+            "ocr",
+            "documents",
+            "history",
+            "image"
+          ],
+          "additionalProperties": false
+        },
+        "ocr.history.candidates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          }
+        },
+        "ocr.history.excluded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              },
+              "reason": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              }
+            },
+            "required": [
+              "id",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ocr.prompt.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "ocr.model_call.ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          },
+          "minItems": 1
+        },
+        "ocr.postprocess.kind": {
+          "enum": [
+            "deterministic",
+            "requery"
+          ]
+        },
+        "ocr.postprocess.rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              },
+              "result": {
+                "enum": [
+                  "unchanged",
+                  "changed",
+                  "flagged"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "result"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ocr.output.before.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "ocr.output.after.digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "runId",
+    "traceId",
+    "spanId",
+    "name",
+    "startTime",
+    "endTime",
+    "status",
+    "attributes"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^invoke_agent( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "gen_ai.operation.name",
+              "gen_ai.agent.name",
+              "gen_ai.agent.version",
+              "ocr.item.id",
+              "ocr.condition.id",
+              "ocr.manifest.digest",
+              "ocr.dataset.version",
+              "ocr.repeat",
+              "platform.idempotency_key",
+              "ocr.outcome"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^ocr( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "ocr.engine.name",
+              "ocr.engine.version",
+              "ocr.output.digest",
+              "ocr.cache.hit"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^retrieval( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "gen_ai.operation.name",
+              "gen_ai.data_source.id",
+              "gen_ai.retrieval.top_k",
+              "gen_ai.retrieval.documents",
+              "ocr.retrieval.query.digest"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^context( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "ocr.context.template.digest",
+              "ocr.context.order",
+              "ocr.context.tokens"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^history( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "ocr.history.candidates",
+              "ocr.history.excluded"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^chat( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "gen_ai.operation.name",
+              "gen_ai.provider.name",
+              "gen_ai.request.model",
+              "ocr.prompt.digest",
+              "ocr.model_call.ids"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "name": {
+            "pattern": "^postprocess( |$)"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "attributes": {
+            "required": [
+              "platform.guardrail.mode",
+              "ocr.postprocess.kind",
+              "ocr.postprocess.rules",
+              "ocr.output.before.digest",
+              "ocr.output.after.digest"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "error"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "errorCode"
+        ]
+      }
+    }
+  ]
+}

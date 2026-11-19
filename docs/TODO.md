@@ -4,7 +4,7 @@
 
 ## 사용자 확인 대기
 
-- [ ] 스키마 설계안 v2 ([schema-design.md](schema-design.md)) 확인. 확인 후 스키마 코드와 테스트를 v2로 교체
+- [x] 스키마 v2 ([schema-design.md](schema-design.md)) 확정과 구현 (기록 8종, 스키마 버전 1.0.0)
 - [ ] M1a 결과 확인과 M1b(수집기) 착수 확정
 - [ ] 데이터 이용약관이 외부 모델 전송을 허용하는지 확인 (M3 선행 조건)
 - [ ] 데이터 공식 설명서 확보 (라벨 유형 코드 정의)
@@ -18,7 +18,7 @@
 ### M0 저장소 골격
 - [x] CLAUDE.md, 연구 플랜, 구현 플랜, TODO, HISTORY 작성
 - [x] 폴더 구조와 Python 프로젝트 설정
-- [x] 스키마 4종: 항목, 트레이스, 평가 기록, 비용 장부
+- [x] 스키마 4종(v1) → 8종(v2)으로 교체: item, knowledgeDocument, conditionManifest, span, rawPayload, modelCall, fieldScore, evaluation
 - [x] 스키마 검증 테스트와 CI
 - [x] 데이터·개인정보가 커밋되지 않는지 검사하는 테스트
 
@@ -42,7 +42,7 @@
 - [ ] 필드 정답 자동 추출
 - [ ] 질의 생성과 질의 3종 표시
 - [ ] 사람 검수 목록과 이중 라벨 일치도
-- [ ] 정답 버전 동결 (`eval-v1`)
+- [ ] 정답 버전 동결 (평가셋 `1.0.0`)
 
 ### M3 채점기 + 기준선
 - [ ] 채점기 (필드 일치, F1, ANLS, CER)와 단위 테스트

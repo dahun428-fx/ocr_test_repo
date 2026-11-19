@@ -1,0 +1,1476 @@
+{
+  "schemaVersion": "1.0.0",
+  "platformContractVersion": "0.2.0",
+  "schemas": {
+    "item": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "item",
+      "description": "평가 항목 1건(이미지 1장). 촬영자 개인정보 키는 정의하지 않습니다.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "item"
+        },
+        "itemId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "datasetVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "sourceFormat": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "domain": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "productId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "test"
+          ]
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": false
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fieldId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              },
+              "queryType": {
+                "enum": [
+                  "A",
+                  "B",
+                  "C"
+                ]
+              },
+              "gold": {
+                "type": "string"
+              },
+              "evidenceDocumentId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              }
+            },
+            "required": [
+              "fieldId",
+              "queryType",
+              "gold"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "queries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "queryId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              },
+              "queryType": {
+                "enum": [
+                  "A",
+                  "B",
+                  "C"
+                ]
+              },
+              "question": {
+                "type": "string",
+                "minLength": 1
+              },
+              "answer": {
+                "type": "string"
+              },
+              "evidenceDocumentId": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              }
+            },
+            "required": [
+              "queryId",
+              "queryType",
+              "question",
+              "answer"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "itemId",
+        "imageDigest",
+        "datasetVersion",
+        "sourceFormat",
+        "domain",
+        "productId",
+        "split",
+        "image",
+        "classification",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "conditionManifest": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "conditionManifest",
+      "description": "조건 하나의 불변 선언. 이 기록의 해시가 manifestDigest입니다.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "conditionManifest"
+        },
+        "conditionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "requestModel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "authRoute": {
+              "enum": [
+                "subscription_oauth",
+                "api_key",
+                "fake"
+              ]
+            }
+          },
+          "required": [
+            "requestModel",
+            "authRoute"
+          ],
+          "additionalProperties": false
+        },
+        "components": {
+          "type": "object",
+          "properties": {
+            "ocr": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                    },
+                    "version": {
+                      "type": "string",
+                      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "retrieval": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                    },
+                    "version": {
+                      "type": "string",
+                      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "context": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                    },
+                    "version": {
+                      "type": "string",
+                      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "history": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                    },
+                    "version": {
+                      "type": "string",
+                      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "postprocess": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                    },
+                    "version": {
+                      "type": "string",
+                      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "required": [
+            "ocr",
+            "retrieval",
+            "context",
+            "history",
+            "postprocess"
+          ],
+          "additionalProperties": false
+        },
+        "promptTemplateDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "knowledgeIndexVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "sdk": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "cliVersion": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            }
+          },
+          "required": [
+            "name",
+            "version",
+            "cliVersion"
+          ],
+          "additionalProperties": false
+        },
+        "policyVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "platformContractVersion": {
+          "const": "0.2.0"
+        },
+        "semconvCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{7,40}$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "conditionId",
+        "version",
+        "model",
+        "components",
+        "promptTemplateDigest",
+        "sdk",
+        "policyVersion",
+        "platformContractVersion",
+        "semconvCommit"
+      ],
+      "additionalProperties": false
+    },
+    "span": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "span",
+      "description": "실행 단계 1개(OTel span). 원문은 넣지 않고 해시와 참조만 둡니다.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "span"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "spanId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "parentSpanId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^(invoke_agent|ocr|retrieval|context|history|chat|postprocess)( [^ ]+)?$"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "status": {
+          "enum": [
+            "ok",
+            "error"
+          ]
+        },
+        "errorCode": {
+          "enum": [
+            "UNAUTHENTICATED",
+            "FORBIDDEN",
+            "VALIDATION_ERROR",
+            "NOT_FOUND",
+            "CONFLICT",
+            "NOT_IMPLEMENTED",
+            "UPSTREAM_UNAVAILABLE",
+            "UPSTREAM_TIMEOUT",
+            "UPSTREAM_ERROR",
+            "RATE_LIMITED"
+          ]
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "gen_ai.operation.name": {
+              "enum": [
+                "invoke_agent",
+                "retrieval",
+                "chat"
+              ]
+            },
+            "gen_ai.agent.name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gen_ai.agent.version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "gen_ai.provider.name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gen_ai.request.model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gen_ai.response.model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gen_ai.input.messages_ref": {
+              "type": "string",
+              "pattern": "^raw://sha256:[a-f0-9]{64}$"
+            },
+            "gen_ai.output.messages_ref": {
+              "type": "string",
+              "pattern": "^raw://sha256:[a-f0-9]{64}$"
+            },
+            "gen_ai.system_instructions_ref": {
+              "type": "string",
+              "pattern": "^raw://sha256:[a-f0-9]{64}$"
+            },
+            "gen_ai.data_source.id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+            },
+            "gen_ai.retrieval.top_k": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "gen_ai.retrieval.documents": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  },
+                  "score": {
+                    "type": "number"
+                  },
+                  "rank": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "selected": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "score",
+                  "rank",
+                  "selected"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "platform.idempotency_key": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+            },
+            "platform.guardrail.mode": {
+              "enum": [
+                "check_only",
+                "enforce"
+              ]
+            },
+            "ocr.item.id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+            },
+            "ocr.condition.id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+            },
+            "ocr.manifest.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "ocr.dataset.version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "ocr.repeat": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ocr.outcome": {
+              "enum": [
+                "ok",
+                "refused",
+                "empty",
+                "error"
+              ]
+            },
+            "ocr.engine.name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ocr.engine.version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ocr.output.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "ocr.output.ref": {
+              "type": "string",
+              "pattern": "^raw://sha256:[a-f0-9]{64}$"
+            },
+            "ocr.cache.hit": {
+              "type": "boolean"
+            },
+            "ocr.retrieval.query.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "ocr.retrieval.query.ref": {
+              "type": "string",
+              "pattern": "^raw://sha256:[a-f0-9]{64}$"
+            },
+            "ocr.context.template.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "ocr.context.order": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              }
+            },
+            "ocr.context.tokens": {
+              "type": "object",
+              "properties": {
+                "instruction": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "ocr": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "documents": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "history": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "image": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "instruction",
+                "ocr",
+                "documents",
+                "history",
+                "image"
+              ],
+              "additionalProperties": false
+            },
+            "ocr.history.candidates": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              }
+            },
+            "ocr.history.excluded": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  }
+                },
+                "required": [
+                  "id",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "ocr.prompt.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "ocr.model_call.ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+              },
+              "minItems": 1
+            },
+            "ocr.postprocess.kind": {
+              "enum": [
+                "deterministic",
+                "requery"
+              ]
+            },
+            "ocr.postprocess.rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  },
+                  "result": {
+                    "enum": [
+                      "unchanged",
+                      "changed",
+                      "flagged"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "result"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "ocr.output.before.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            "ocr.output.after.digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "runId",
+        "traceId",
+        "spanId",
+        "name",
+        "startTime",
+        "endTime",
+        "status",
+        "attributes"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^invoke_agent( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "gen_ai.operation.name",
+                  "gen_ai.agent.name",
+                  "gen_ai.agent.version",
+                  "ocr.item.id",
+                  "ocr.condition.id",
+                  "ocr.manifest.digest",
+                  "ocr.dataset.version",
+                  "ocr.repeat",
+                  "platform.idempotency_key",
+                  "ocr.outcome"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^ocr( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "ocr.engine.name",
+                  "ocr.engine.version",
+                  "ocr.output.digest",
+                  "ocr.cache.hit"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^retrieval( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "gen_ai.operation.name",
+                  "gen_ai.data_source.id",
+                  "gen_ai.retrieval.top_k",
+                  "gen_ai.retrieval.documents",
+                  "ocr.retrieval.query.digest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^context( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "ocr.context.template.digest",
+                  "ocr.context.order",
+                  "ocr.context.tokens"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^history( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "ocr.history.candidates",
+                  "ocr.history.excluded"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^chat( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "gen_ai.operation.name",
+                  "gen_ai.provider.name",
+                  "gen_ai.request.model",
+                  "ocr.prompt.digest",
+                  "ocr.model_call.ids"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^postprocess( |$)"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "attributes": {
+                "required": [
+                  "platform.guardrail.mode",
+                  "ocr.postprocess.kind",
+                  "ocr.postprocess.rules",
+                  "ocr.output.before.digest",
+                  "ocr.output.after.digest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "error"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "errorCode"
+            ]
+          }
+        }
+      ]
+    },
+    "rawPayload": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "rawPayload",
+      "description": "원문 저장 기록. 저장소에 올리지 않습니다.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "rawPayload"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "spanId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "ocr_output",
+            "retrieval_query",
+            "input_messages",
+            "output_messages",
+            "postprocess_output"
+          ]
+        },
+        "content": {
+          "type": "string"
+        },
+        "retention": {
+          "oneOf": [
+            {
+              "const": "study"
+            },
+            {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "runId",
+        "traceId",
+        "spanId",
+        "digest",
+        "kind",
+        "content",
+        "retention"
+      ],
+      "additionalProperties": false
+    },
+    "modelCall": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "modelCall",
+      "description": "비용 장부. 모델 호출 1회(재시도·보조 모델 포함)가 1줄입니다.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "modelCall"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "spanId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "modelCallId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "itemId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "conditionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modelRole": {
+          "enum": [
+            "main",
+            "auxiliary"
+          ]
+        },
+        "authRoute": {
+          "enum": [
+            "subscription_oauth",
+            "api_key",
+            "fake"
+          ]
+        },
+        "provider": {
+          "enum": [
+            "external",
+            "self-hosted"
+          ]
+        },
+        "routeDecisionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "usage": {
+          "type": "object",
+          "properties": {
+            "inputTokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "outputTokens": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "inputTokens",
+            "outputTokens"
+          ],
+          "additionalProperties": false
+        },
+        "attributes": {
+          "type": "object",
+          "properties": {
+            "gen_ai.request.model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gen_ai.response.model": {
+              "type": "string",
+              "minLength": 1
+            },
+            "gen_ai.response.finish_reasons": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "gen_ai.usage.cache_read.input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gen_ai.usage.cache_write.input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gen_ai.usage.reasoning.output_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gen_ai.usage.image.input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ocr.usage.hidden_context_tokens": {
+              "type": "integer"
+            },
+            "ocr.sdk.num_turns": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ocr.sdk.duration_api_ms": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "gen_ai.request.model",
+            "gen_ai.usage.cache_read.input_tokens",
+            "gen_ai.usage.cache_write.input_tokens",
+            "ocr.usage.hidden_context_tokens"
+          ],
+          "additionalProperties": false
+        },
+        "cost": {
+          "type": "object",
+          "properties": {
+            "sdkReportedUsd": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "number",
+                  "minimum": 0
+                }
+              ]
+            },
+            "computedUsd": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "number",
+                  "minimum": 0
+                }
+              ]
+            },
+            "priceTableVersion": {
+              "type": "string",
+              "minLength": 1
+            },
+            "basis": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "sdkReportedUsd",
+            "computedUsd",
+            "priceTableVersion"
+          ],
+          "additionalProperties": false
+        },
+        "errorCode": {
+          "enum": [
+            "UNAUTHENTICATED",
+            "FORBIDDEN",
+            "VALIDATION_ERROR",
+            "NOT_FOUND",
+            "CONFLICT",
+            "NOT_IMPLEMENTED",
+            "UPSTREAM_UNAVAILABLE",
+            "UPSTREAM_TIMEOUT",
+            "UPSTREAM_ERROR",
+            "RATE_LIMITED",
+            null
+          ]
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "runId",
+        "traceId",
+        "spanId",
+        "modelCallId",
+        "itemId",
+        "conditionId",
+        "at",
+        "attempt",
+        "modelRole",
+        "authRoute",
+        "provider",
+        "routeDecisionId",
+        "usage",
+        "attributes",
+        "cost",
+        "errorCode",
+        "durationMs"
+      ],
+      "additionalProperties": false
+    },
+    "fieldScore": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "fieldScore",
+      "description": "채점 1건. productId는 제품 단위 신뢰구간·검정용입니다.",
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "recordType": {
+          "const": "fieldScore"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "scoreId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "itemId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "productId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "field"
+                },
+                "fieldId": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                }
+              },
+              "required": [
+                "kind",
+                "fieldId"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "query"
+                },
+                "queryId": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                }
+              },
+              "required": [
+                "kind",
+                "queryId"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "item"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "queryType": {
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "ocrMisread": {
+          "type": "boolean"
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "score": {
+          "type": "number"
+        },
+        "stage": {
+          "enum": [
+            "before_postprocess",
+            "after_postprocess"
+          ]
+        },
+        "datasetVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "agentVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "scorerVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "runId",
+        "traceId",
+        "scoreId",
+        "itemId",
+        "productId",
+        "target",
+        "metric",
+        "score",
+        "stage",
+        "datasetVersion",
+        "agentVersion",
+        "manifestDigest",
+        "scorerVersion"
+      ],
+      "additionalProperties": false
+    },
+    "knowledgeDocument": {
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "citation": {
+          "type": "string",
+          "format": "uri"
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        },
+        "tenantId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "allowedPrincipals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          }
+        }
+      },
+      "required": [
+        "documentId",
+        "content",
+        "citation",
+        "classification",
+        "tenantId",
+        "allowedPrincipals"
+      ],
+      "additionalProperties": false
+    },
+    "evaluation": {
+      "type": "object",
+      "properties": {
+        "evaluationId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+        },
+        "datasetVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "agentVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "manifestDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "policyVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "score": {
+          "type": "number"
+        },
+        "threshold": {
+          "type": "number"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        }
+      },
+      "required": [
+        "evaluationId",
+        "datasetVersion",
+        "agentVersion",
+        "manifestDigest",
+        "policyVersion",
+        "metric",
+        "score",
+        "threshold",
+        "passed",
+        "traceId"
+      ],
+      "additionalProperties": false,
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://agent.example.invalid/contracts/evaluation.schema.json",
+      "title": "evaluation"
+    }
+  }
+}

@@ -1,44 +1,48 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "item",
-  "description": "평가 항목 한 건. 촬영자 개인정보는 수집 단계에서 제거하므로 정의되지 않은 키는 허용하지 않습니다.",
+  "description": "평가 항목 1건(이미지 1장). 촬영자 개인정보 키는 정의하지 않습니다.",
   "type": "object",
   "properties": {
-    "item_id": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$",
-      "description": "이미지 내용 해시"
+    "schemaVersion": {
+      "const": "1.0.0"
     },
-    "dataset_version": {
-      "type": "string",
-      "minLength": 1
+    "recordType": {
+      "const": "item"
     },
-    "source_format": {
+    "itemId": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+    },
+    "imageDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "datasetVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "sourceFormat": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
     },
     "domain": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
     },
-    "product_id": {
+    "productId": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
     },
     "split": {
       "enum": [
         "dev",
         "test"
-      ],
-      "description": "제품 단위 고정 분할"
+      ]
     },
     "image": {
       "type": "object",
       "properties": {
-        "sha256": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
         "width": {
           "type": "integer",
           "minimum": 1
@@ -49,22 +53,29 @@
         }
       },
       "required": [
-        "sha256",
         "width",
         "height"
       ],
       "additionalProperties": false
+    },
+    "classification": {
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
     },
     "fields": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "field_id": {
+          "fieldId": {
             "type": "string",
-            "minLength": 1
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
           },
-          "query_type": {
+          "queryType": {
             "enum": [
               "A",
               "B",
@@ -72,18 +83,54 @@
             ]
           },
           "gold": {
-            "type": "string",
-            "description": "포장에 인쇄된 값"
+            "type": "string"
           },
-          "evidence_document_id": {
+          "evidenceDocumentId": {
             "type": "string",
-            "minLength": 1
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
           }
         },
         "required": [
-          "field_id",
-          "query_type",
+          "fieldId",
+          "queryType",
           "gold"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "queryId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          },
+          "queryType": {
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "answer": {
+            "type": "string"
+          },
+          "evidenceDocumentId": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+          }
+        },
+        "required": [
+          "queryId",
+          "queryType",
+          "question",
+          "answer"
         ],
         "additionalProperties": false
       }
@@ -92,18 +139,22 @@
       "type": "array",
       "items": {
         "type": "string",
-        "minLength": 1
+        "pattern": "^[a-z][a-z0-9.-]{1,63}$"
       }
     }
   },
   "required": [
-    "item_id",
-    "dataset_version",
-    "source_format",
+    "schemaVersion",
+    "recordType",
+    "itemId",
+    "imageDigest",
+    "datasetVersion",
+    "sourceFormat",
     "domain",
-    "product_id",
+    "productId",
     "split",
     "image",
+    "classification",
     "fields"
   ],
   "additionalProperties": false

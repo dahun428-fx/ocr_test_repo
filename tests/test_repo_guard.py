@@ -30,6 +30,16 @@ def test_schema_json_is_allowed(tmp_path):
     assert find_violations(tmp_path, [rel]) == []
 
 
+def test_schema_json_in_subfolders_is_allowed(tmp_path):
+    rel = _write(tmp_path, "src/ocr_harness/schemas/released/1.0.0.json", "{}")
+    assert find_violations(tmp_path, [rel]) == []
+
+
+def test_json_in_a_lookalike_folder_is_still_flagged(tmp_path):
+    rel = _write(tmp_path, "src/ocr_harness/schemas-data/label.json", "{}")
+    assert len(find_violations(tmp_path, [rel])) == 1
+
+
 def test_email_address_in_text_is_flagged(tmp_path):
     rel = _write(tmp_path, "notes.md", f"촬영자 {EMAIL}")
     violations = find_violations(tmp_path, [rel])

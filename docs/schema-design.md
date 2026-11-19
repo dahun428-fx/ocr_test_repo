@@ -1,8 +1,8 @@
-# 스키마 설계안 v2 (제안)
+# 스키마 설계 v2
 
-상태: **제안. 사용자 확인 전에는 코드를 바꾸지 않습니다.** 작성 2026-11-19.
+상태: **확정, 구현 완료 (스키마 버전 1.0.0).** 2026-11-19 사용자가 9절의 권고 5건을 모두 채택했습니다. 구현은 `src/ocr_harness/schemas/`, 검증은 `tests/test_schemas.py`입니다.
 
-M0에서 만든 스키마 4종(v1)은 근거 대조 없이 이름을 정한 곳이 많았습니다. 이 문서는 (1) 근거를 원문으로 확인하고, (2) 나중에 [aiagent_platform_core_system_architecture](https://github.com/dahun428-fx/aiagent_platform_core_system_architecture)(이하 플랫폼)에 그대로 넣을 수 있는 구조로 다시 잡은 설계안입니다.
+M0에서 만든 스키마 4종(v1)은 근거 대조 없이 이름을 정한 곳이 많았습니다. 이 문서는 (1) 근거를 원문으로 확인하고, (2) 나중에 [aiagent_platform_core_system_architecture](https://github.com/dahun428-fx/aiagent_platform_core_system_architecture)(이하 플랫폼)에 그대로 넣을 수 있는 구조로 다시 잡은 설계입니다.
 
 ## 1. 확인한 근거
 
@@ -15,7 +15,7 @@ M0에서 만든 스키마 4종(v1)은 근거 대조 없이 이름을 정한 곳�
 | 선행 연구 실행 기록 | `E:\ocr-local-benchmark\research\runs\*\predictions.jsonl`의 `sdk.usage`, `sdk.model_usage`, `total_cost_usd_reported` | 주·보조 모델 분리, 캐시 토큰, SDK 보고 비용 |
 | 선행 문헌 | OHRBench (arXiv 2412.02592), Adding Error Bars to Evals (arXiv 2411.00640) | 단계별(OCR·검색·생성) 기록 분리, 채점 기록에 군집 단위(제품) 포함 |
 
-아직 원문으로 대조하지 못한 것: 선행 연구 `predictions.jsonl`의 전체 키 목록. 구현 전에 PC에서 다시 읽어 6.5절 표를 확정합니다.
+선행 연구 `predictions.jsonl`의 키는 PC에서 원문으로 읽어 6.5절에 반영했습니다 (`sdk.usage`, `sdk.model_usage.<모델>`, `sdk.num_turns`, `sdk.duration_api_ms`, `sdk.total_cost_usd_reported`).
 
 ## 2. 플랫폼 계약에서 확인한 형식 규칙
 
@@ -77,7 +77,7 @@ v1은 이 규칙들과 어긋납니다.
 | --- | --- | --- |
 | `schemaVersion` | semver | 플랫폼 versioning. v1에 없던 것 |
 | `recordType` | 기록 종류 이름 (상수) | JSONL 한 파일에 섞여도 구분 |
-| `runId` | 플랫폼 id 패턴 | 실행 묶음 |
+| `runId` | 플랫폼 id 패턴 | 실행 묶음 (span, rawPayload, modelCall, fieldScore. item과 conditionManifest는 실행과 무관하므로 없음) |
 | `traceId` | 32자리 16진수 | W3C, 플랫폼 `evaluation.traceId` (item·conditionManifest 제외) |
 
 ## 6. 기록별 정의
@@ -98,6 +98,7 @@ v1은 이 규칙들과 어긋납니다.
 | `classification` | ● | `public` / `internal` / `confidential` / `restricted` | 플랫폼 데이터 분류. 이용약관 확인 결과를 여기에 기록 |
 | `fields[]` | ● | `fieldId`, `queryType`(A/B/C), `gold`, `evidenceDocumentId`○ | 설계 v3. gold는 인쇄된 값 |
 | `queries[]` | ○ | `queryId`, `queryType`, `question`, `answer`, `evidenceDocumentId`○ | v1에 없던 것. 주 과제의 질의응답 |
+| `tags[]` | ○ | 플랫폼 id 패턴의 문자열 배열 | 분석용 표시 (예: 촬영 조건) |
 
 촬영자 개인정보 키는 정의하지 않으므로 들어올 수 없습니다 (닫힌 스키마).
 
@@ -109,7 +110,7 @@ v1은 이 규칙들과 어긋납니다.
 | --- | --- | --- |
 | `documentId` | 플랫폼 id 패턴 | 식약처 품목기준코드에서 만듦 |
 | `content` | 문서 본문 | 저장소 밖에 저장 |
-| `citation` | 출처 URL과 받은 날짜 | |
+| `citation` | 출처 URL (URI 형식만 허용) | 받은 날짜는 색인 목록에 기록 |
 | `classification` | `public` | 공개 근거 자료만 색인 (CLAUDE.md 규칙 3) |
 | `tenantId` | `ocr-research` (고정) | 원칙 6 |
 | `allowedPrincipals` | `["ocr-research"]` (고정) | 플랫폼 id 패턴의 문자열 배열. 원칙 6 |
@@ -130,6 +131,7 @@ v1은 이 규칙들과 어긋납니다.
 | `knowledgeIndexVersion` | ○ | semver | 플랫폼 `knowledgeId` |
 | `sdk` | ● | SDK·CLI 버전 | 연구 계획 §10 (버전 고정) |
 | `policyVersion` | ● | semver. 연구에서는 `0.0.0` 고정 | 플랫폼 evaluation 필수 값 (원칙 6) |
+| `platformContractVersion` | ● | `0.2.0` 고정 | 가져온 플랫폼 계약 버전 |
 | `semconvCommit` | ● | OTel 규약 커밋 | 플랫폼 observability "규격 버전을 고정하고 기록" |
 
 플랫폼의 정식 Agent Manifest(`agent.platform/v1alpha1`)는 identity, governance, deployment까지 요구하므로 지금은 만들지 않습니다. 넣을 때 이 선언에서 변환합니다.
@@ -145,7 +147,7 @@ v1은 이 규칙들과 어긋납니다.
 | `startTime`, `endTime` | ● | RFC 3339 | OTel |
 | `status` | ● | `ok` / `error` | OTel span status |
 | `errorCode` | ○ | 플랫폼 `problem.code` 10종 | status가 error이면 필수 |
-| `attributes` | ● | 아래 표의 이름만 허용 | 원칙 2 |
+| `attributes` | ● | 아래 표의 이름만 허용. span 종류마다 필수 속성이 있음 | 원칙 2 |
 
 span 종류와 속성:
 
@@ -178,10 +180,12 @@ span 종류와 속성:
 | `provider` | ● | `external` / `self-hosted` | 플랫폼 `model-result.provider` |
 | `routeDecisionId` | ● | 플랫폼 id 패턴 | 플랫폼 `model-result.routeDecisionId`. 모델 경로 한 곳을 지났다는 기록 |
 | `usage.inputTokens`, `usage.outputTokens` | ● | 0 이상 정수 | 플랫폼 `model-result.usage` 그대로 |
-| `attributes` | ● | `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `gen_ai.usage.image.input_tokens`○, `ocr.usage.hidden_context_tokens`(SDK 입력 합계 − 하네스가 센 합계) | OTel. v1의 `cache_creation`은 규약에 없는 이름이라 `cache_write`로 고침 |
-| `cost` | ● | `sdkReportedUsd`, `computedUsd`, `priceTableVersion` | 선행 연구 `total_cost_usd_reported`. 구독에서는 청구액이 아닌 환산값 |
+| `attributes` | ● | 필수: `gen_ai.request.model`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `ocr.usage.hidden_context_tokens`(SDK 입력 합계 − 하네스가 센 합계). 선택: `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.reasoning.output_tokens`, `gen_ai.usage.image.input_tokens`, `ocr.sdk.num_turns`, `ocr.sdk.duration_api_ms`. 이 밖의 이름은 거부 | OTel. v1의 `cache_creation`은 규약에 없는 이름이라 `cache_write`로 고침 |
+| `cost` | ● | `sdkReportedUsd`, `computedUsd` (모를 때는 `null`, 키는 필수), `priceTableVersion`, `basis`○ | 선행 연구 `total_cost_usd_reported`. 구독에서는 청구액이 아닌 환산값 |
 | `errorCode` | ● | 플랫폼 `problem.code` 또는 `null` | |
 | `durationMs` | ● | | |
+
+선행 연구 기록과의 대응: SDK 결과 1건의 `sdk.model_usage`에는 모델별 항목이 들어 있습니다(주 모델과 보조 Haiku). 모델 하나당 modelCall 1줄로 풀어 적고 `modelRole`로 구분합니다. `cacheCreationInputTokens`는 `gen_ai.usage.cache_write.input_tokens`로, `costUSD`는 `cost.sdkReportedUsd`로, `costBasis`는 `cost.basis`로 옮깁니다.
 
 ### 6.6 rawPayload
 
@@ -256,7 +260,7 @@ span 종류와 속성:
 9. 모든 기록에 `schemaVersion`, 스냅샷 동결 테스트.
 10. item에 질의와 데이터 분류 추가.
 
-## 9. 사용자가 정할 것
+## 9. 사용자가 정한 것 (2026-11-19, 모두 권고대로 채택)
 
 | 결정 | 권고 | 이유 |
 | --- | --- | --- |
@@ -265,3 +269,17 @@ span 종류와 속성:
 | trace를 span 여러 줄로 | 채택 | 플랫폼 observability가 요구(MUST). 대시보드에서는 traceId로 묶어 읽음 |
 | 플랫폼 계약 버전 고정 | 0.2.0 | 현재 released 최신 |
 | 통계 값(CI, p값)의 자리 | 별도 리포트 | 플랫폼 계약 변경은 플랫폼 ADR 대상 |
+
+## 10. 구현 위치와 바꾸는 절차
+
+| 무엇 | 어디 |
+| --- | --- |
+| 이 저장소가 정의하는 6종 | `src/ocr_harness/schemas/{item,condition-manifest,span,raw-payload,model-call,field-score}.schema.json` |
+| 플랫폼 계약 사본 (고치지 않음) | `src/ocr_harness/schemas/platform/0.2.0/{evaluation,retrieval}.schema.json`. 테스트가 파일 해시를 원본과 대조 |
+| 동결 스냅샷 | `src/ocr_harness/schemas/released/1.0.0.json` |
+| 검증 함수 | `ocr_harness.schema.validate(kind, record)` |
+| id·해시 | `ocr_harness.ids.item_id`, `ocr_harness.ids.manifest_digest` |
+
+스키마를 바꾸려면 (1) 실패하는 테스트를 먼저 쓰고, (2) 스키마 파일과 `SCHEMA_VERSION`을 올리고, (3) `released/<새 버전>.json`을 추가하고, (4) HISTORY에 이유를 적습니다. 스냅샷과 현재 스키마가 다르면 테스트가 실패합니다.
+
+span 속성 이름을 닫힌 목록으로 둔 이유: 원문이 들어가는 이름(`gen_ai.input.messages`, `gen_ai.retrieval.query.text` 등)과 규약에 없는 이름이 섞이는 것을 스키마에서 막기 위해서입니다. 속성을 늘릴 때는 위 절차로 버전을 올립니다.

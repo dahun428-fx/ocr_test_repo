@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 DATA_SUFFIXES = {".jpg", ".jpeg", ".png", ".pdf", ".jsonl"}
-# JSON은 스키마 폴더에만 둘 수 있습니다. 라벨 JSON이 섞이는 것을 막습니다.
-JSON_ALLOWED_DIR = "src/ocr_harness/schemas"
+# JSON은 스키마 폴더와 그 하위 폴더에만 둘 수 있습니다. 라벨 JSON이 섞이는 것을 막습니다.
+JSON_ALLOWED_PREFIX = "src/ocr_harness/schemas/"
 EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+")
 ALLOWED_EMAILS = {"noreply@anthropic.com"}
 # 원본 라벨에서 촬영자 정보를 담는 키
@@ -26,7 +26,7 @@ def find_violations(root: Path, relative_paths: list[str]) -> list[Violation]:
         if suffix in DATA_SUFFIXES:
             found.append(Violation(rel, f"데이터 파일 형식 {suffix}"))
             continue
-        if suffix == ".json" and str(posix.parent) != JSON_ALLOWED_DIR:
+        if suffix == ".json" and not str(posix).startswith(JSON_ALLOWED_PREFIX):
             found.append(Violation(rel, "스키마 폴더 밖의 JSON"))
             continue
         try:

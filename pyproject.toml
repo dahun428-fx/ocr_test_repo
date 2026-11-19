@@ -16,7 +16,7 @@ dev = ["pytest>=8"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-ocr_harness = ["schemas/*.json"]
+ocr_harness = ["schemas/*.json", "schemas/**/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

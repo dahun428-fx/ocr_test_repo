@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "rawPayload",
+  "description": "원문 저장 기록. 저장소에 올리지 않습니다.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "recordType": {
+      "const": "rawPayload"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{16}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "kind": {
+      "enum": [
+        "ocr_output",
+        "retrieval_query",
+        "input_messages",
+        "output_messages",
+        "postprocess_output"
+      ]
+    },
+    "content": {
+      "type": "string"
+    },
+    "retention": {
+      "oneOf": [
+        {
+          "const": "study"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "runId",
+    "traceId",
+    "spanId",
+    "digest",
+    "kind",
+    "content",
+    "retention"
+  ],
+  "additionalProperties": false
+}

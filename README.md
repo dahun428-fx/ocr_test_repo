@@ -17,7 +17,8 @@ pip install -e ".[dev]"
 pytest -q
 ```
 
-- `src/ocr_harness/schemas/`: 항목, 트레이스, 평가 기록, 비용 장부 스키마 (JSON Schema)
+- `src/ocr_harness/schemas/`: 기록 스키마 8종 (JSON Schema). 플랫폼 계약 0.2.0 사본과 동결 스냅샷 포함. 설계는 `docs/schema-design.md`
 - `src/ocr_harness/schema.py`: 레코드 검증
+- `src/ocr_harness/ids.py`: 항목 id, 조건 선언 해시
 - `src/ocr_harness/repo_guard.py`: 데이터·개인정보가 저장소에 들어가지 않았는지 검사
 - `spikes/`: M1a 탐색 스크립트 (데이터가 있는 PC에서 실행, 집계 숫자만 문서에 기록)
