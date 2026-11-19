@@ -60,7 +60,19 @@ class AgentSdkBackend(ModelBackend):
                 max_turns=1,
                 setting_sources=[],
                 cwd=empty,
-                **({"system_prompt": request.system} if request.system is not None else {}),
+                # 아래 넷은 2026-11-19 PC 시험에서 드러난 문제 때문에 넣었습니다. tools=[]와 setting_sources=[]만으로는
+                # 이 PC 사용자의 MCP 연결, 플러그인, 스킬이 그대로 붙어 도구 정의 수만 토큰이 입력에 섞였고,
+                # MCP가 붙는 타이밍에 따라 같은 이미지의 입력 크기가 2천~4.9만 토큰으로 흔들렸습니다.
+                # 모델 입력이 실행마다 달라지면 비용도 정확도도 비교할 수 없으므로 모두 끕니다.
+                mcp_servers={},        # 우리가 주는 MCP 서버는 없습니다.
+                plugins=[],
+                # SDK 버전에 따라 전용 필드가 없을 수 있어 CLI 인자를 그대로 넘깁니다 (값 없는 인자는 None).
+                # strict-mcp-config: 위 mcp_servers에 적은 것만 쓰고 사용자·프로젝트·플러그인·claude.ai 연결은 무시합니다.
+                # disable-slash-commands: 스킬과 명령을 모두 끕니다.
+                extra_args={"strict-mcp-config": None, "disable-slash-commands": None},
+                # 시스템 프롬프트를 주지 않으면 CLI의 기본 프롬프트가 들어갑니다. 요청에 없으면 빈 글자열로 바꿔
+                # 모델이 받는 지시가 요청에 적힌 것뿐이 되게 합니다 (프롬프트 해시가 실제 입력과 맞도록).
+                system_prompt=request.system if request.system is not None else "",
             )
             texts, response_model, error, final = [], None, None, None
             async with ClaudeSDKClient(options) as client:
