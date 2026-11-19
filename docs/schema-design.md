@@ -72,7 +72,7 @@
 ```json
 {"resourceSpans":[{
   "resource":{"attributes":[{"key":"service.name","value":{"stringValue":"ocr-harness"}}, …]},
-  "scopeSpans":[{"scope":{"name":"ocr_harness"},
+  "scopeSpans":[{"scope":{"name":"ocr_harness","version":"0.1.0"},
     "spans":[{"traceId":"…32자리","spanId":"…16자리","parentSpanId":"…","name":"chat claude-sonnet",
               "kind":1,"startTimeUnixNano":"1795050000000000000","endTimeUnixNano":"1795050001000000000",
               "attributes":[{"key":"gen_ai.usage.input_tokens","value":{"intValue":"250"}}, …],
