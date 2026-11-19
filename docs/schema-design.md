@@ -155,7 +155,8 @@ OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 �
 | 가져온 사본 (고치지 않음) | `schemas/platform/0.2.0/`, `schemas/otel-genai/76e0c19e7fe1/` |
 | 동결 스냅샷 | `schemas/released/2.0.0.json` (이전 `1.0.0.json`은 기록으로 보관) |
 | 검증 | `ocr_harness.schema.validate(kind, record)` |
-| OTLP 쓰기·읽기 | `ocr_harness.otlp` |
+| 추적·평가 이벤트 쓰기 | OpenTelemetry SDK + 공식 JSON 인코더. `ocr_harness.otlp`는 파일 내보내기(`JsonLinesSpanExporter`, `JsonLinesLogExporter`)와 `resource`, `finish`, `emit_evaluation`만 더함 |
+| 추적 읽기 | `ocr_harness.otlp`의 `plain_attributes`, `flatten_spans` |
 | 비용 장부 집계 | `ocr_harness.ledger.model_calls` |
 | id와 해시 | `ocr_harness.ids` |
 
@@ -170,6 +171,9 @@ OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 �
 
 ## 11. 알려진 한계
 
-- 속성 배열 안에서 같은 이름이 두 번 나오는 것은 스키마로 막지 못합니다 (OTLP는 이름이 겹치지 않아야 한다고 정합니다). 쓰는 쪽 도우미가 dict에서 만들므로 실제로는 생기지 않습니다.
+- 기록은 OpenTelemetry Python SDK(`opentelemetry-sdk` 1.45.2)와 공식 JSON 인코더(`opentelemetry-exporter-otlp-json-common` 0.66b2)로 만듭니다. 인코더와 SDK의 로그 API는 아직 베타라 버전을 고정했습니다. 올릴 때는 "SDK가 만든 기록이 스키마를 통과한다"는 테스트가 차이를 잡습니다.
+- Python SDK에는 OTLP JSON 파일 내보내기가 없어 그 부분(약 20줄)만 직접 썼습니다.
+
+- 속성 배열 안에서 같은 이름이 두 번 나오는 것은 스키마로 막지 못합니다 (OTLP는 이름이 겹치지 않아야 한다고 정합니다). SDK가 속성을 이름별로 하나만 가지므로 실제로는 생기지 않습니다.
 - `citation`의 URI 형식은 JSON Schema의 `format`이라 검증기가 강제하지 않습니다.
 - Croissant 데이터셋 설명 파일은 아직 없습니다. M1b에서 수집기와 함께 만듭니다.

@@ -8,7 +8,6 @@ from importlib import resources
 
 import pytest
 
-from ocr_harness import otlp
 from ocr_harness.schema import KINDS, SCHEMA_VERSION, SchemaError, bundle, validate
 
 import samples
@@ -24,7 +23,7 @@ OPTIONAL = {
 def set_attribute(record, key, value):
     """OTLP 속성 배열에서 key의 값을 바꾸거나 새로 넣습니다."""
     record["attributes"] = [kv for kv in record["attributes"] if kv["key"] != key]
-    record["attributes"].append({"key": key, "value": otlp.any_value(value)})
+    record["attributes"].append({"key": key, "value": samples.any_value(value)})
 
 
 def drop_attribute(record, key):

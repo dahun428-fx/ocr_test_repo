@@ -1,0 +1,8 @@
+jsonschema>=4.20
+referencing>=0.30
+rfc8785>=0.1.4
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-otlp-json-common==0.66b2
+
+[dev]
+pytest>=8

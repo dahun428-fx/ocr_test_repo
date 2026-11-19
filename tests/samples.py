@@ -1,8 +1,15 @@
 """스키마 테스트용 합성 기록. 실제 데이터나 개인정보를 넣지 않습니다.
 
 추적(tracesData)과 평가 이벤트(logsData)는 OTLP JSON 형식이라 손으로 쓰면 길어집니다.
-그래서 ocr_harness.otlp의 도우미로 만들고, 형식 자체는 tests/test_otlp.py에서 글자 그대로 확인합니다.
+그래서 실제 실행과 같은 길(OpenTelemetry SDK → 공식 JSON 인코더)로 만듭니다.
+SDK가 만든 기록이 우리 스키마를 통과하는지가 곧 테스트입니다.
 """
+from opentelemetry.sdk._logs import LoggerProvider
+from opentelemetry.sdk._logs.export import InMemoryLogRecordExporter, SimpleLogRecordProcessor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+
 from ocr_harness import otlp
 
 D = "sha256:" + "a" * 64          # 형식만 맞춘 가짜 해시
@@ -11,7 +18,6 @@ SPAN = "0123456789abcdef"                    # spanId: 16진수 16자리
 PARENT = "fedcba9876543210"
 V = "2.0.0"                        # 스키마 버전
 ITEM = "img-" + "a" * 32
-T0, T1 = "1795050000000000000", "1795050001000000000"   # 유닉스 나노초 (문자열)
 
 
 def item():
@@ -165,13 +171,50 @@ SPAN_KINDS = {
 }
 
 
-def traces(name="invoke_agent ocr-harness", attributes=None, **span_extra):
-    """span 하나가 든 추적 파일 한 줄 (OTLP TracesData)."""
+def any_value(value):
+    """파이썬 값 → OTLP AnyValue. 테스트에서 속성을 일부러 고쳐 볼 때만 씁니다 (실제 기록은 SDK가 만듭니다)."""
+    if isinstance(value, bool):
+        return {"boolValue": value}
+    if isinstance(value, int):
+        return {"intValue": str(value)}
+    if isinstance(value, float):
+        return {"doubleValue": value}
+    if isinstance(value, str):
+        return {"stringValue": value}
+    if isinstance(value, dict):
+        return {"kvlistValue": {"values": [{"key": k, "value": any_value(v)} for k, v in value.items()]}}
+    return {"arrayValue": {"values": [any_value(v) for v in value]}}
+
+
+def run_spans(specs):
+    """OpenTelemetry SDK로 span들을 만들어 OTLP JSON 한 줄(dict)로 돌려줍니다.
+
+    specs: (이름, 속성, 오류 코드 또는 None)의 목록. 첫 번째가 루트이고 나머지는 그 자식입니다.
+    """
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider(resource=otlp.resource("run-0001", "0.1.0"))
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    tracer = provider.get_tracer(otlp.SCOPE_NAME, "0.1.0")
+    (root_name, root_attributes, root_error), *children = specs
+    with tracer.start_as_current_span(root_name, attributes=root_attributes) as root:
+        otlp.finish(root, root_error)
+        for name, attributes, error in children:
+            with tracer.start_as_current_span(name, attributes=attributes) as child:
+                otlp.finish(child, error)
+    return exporter.get_finished_spans()
+
+
+def traces(name="invoke_agent ocr-harness", attributes=None, error_type=None):
+    """span 하나가 든 추적 파일 한 줄 (OTLP TracesData). SDK가 만든 것을 공식 인코더로 바꿉니다."""
     if attributes is None:
         attributes = SPAN_KINDS[name]()
-    parent = None if name.startswith("invoke_agent") else PARENT
-    one = otlp.span(TRACE, SPAN, name, T0, T1, attributes, parent_span_id=parent, **span_extra)
-    return otlp.traces_data("run-0001", "0.1.0", [one])
+    if name.startswith("invoke_agent"):
+        spans = run_spans([(name, attributes, error_type)])
+    else:
+        # 자식 span만 남깁니다 (부모는 parentSpanId를 만들려고 잠깐 만든 것).
+        spans = [s for s in run_spans([("invoke_agent ocr-harness", root_attributes(), None), (name, attributes, error_type)])
+                 if s.name == name]
+    return otlp.encode_traces(spans)
 
 
 def the_span(data):
@@ -201,9 +244,15 @@ def score_attributes():
 
 
 def logs(attributes=None):
-    """채점 1건이 든 평가 이벤트 파일 한 줄 (OTLP LogsData)."""
-    event = otlp.evaluation_event(TRACE, SPAN, T1, score_attributes() if attributes is None else attributes)
-    return otlp.logs_data("run-0001", "0.1.0", [event])
+    """채점 1건이 든 평가 이벤트 파일 한 줄 (OTLP LogsData). chat span에 붙여서 SDK로 내보냅니다."""
+    chat = [s for s in run_spans([("invoke_agent ocr-harness", root_attributes(), None),
+                                  ("chat fake-model", chat_attributes(), None)]) if s.name.startswith("chat")][0]
+    exporter = InMemoryLogRecordExporter()
+    provider = LoggerProvider(resource=otlp.resource("run-0001", "0.1.0"))
+    provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
+    otlp.emit_evaluation(provider.get_logger(otlp.SCOPE_NAME, "0.1.0"), chat.get_span_context(),
+                         score_attributes() if attributes is None else attributes)
+    return otlp.encode_logs(exporter.get_finished_logs())
 
 
 def the_event(data):

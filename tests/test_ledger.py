@@ -5,25 +5,23 @@ import samples
 
 
 def _run():
-    """루트 1개 + 모델 호출 2개(주 모델, 보조 모델) + OCR 1개가 든 추적 한 줄."""
-    root = otlp.span(samples.TRACE, "aaaaaaaaaaaaaaaa", "invoke_agent ocr-harness", "1", "9", samples.root_attributes())
-    main = otlp.span(samples.TRACE, "bbbbbbbbbbbbbbbb", "chat fake-model", "2", "5", samples.chat_attributes(),
-                     parent_span_id="aaaaaaaaaaaaaaaa")
+    """루트 1개 + 모델 호출 2개(주 모델, 실패한 보조 모델) + OCR 1개가 든 추적 한 줄."""
     aux_attributes = samples.chat_attributes() | {
         "ocr.model.role": "auxiliary", "gen_ai.request.model": "fake-small",
         "gen_ai.usage.input_tokens": 30, "gen_ai.usage.output_tokens": 2,
     }
     del aux_attributes["ocr.cost.sdk_reported_usd"]      # 모르는 비용은 속성을 뺍니다.
-    aux = otlp.span(samples.TRACE, "cccccccccccccccc", "chat fake-small", "3", "4", aux_attributes,
-                    parent_span_id="bbbbbbbbbbbbbbbb", error_type="RATE_LIMITED")
-    ocr = otlp.span(samples.TRACE, "dddddddddddddddd", "ocr", "1", "2", samples.ocr_attributes(),
-                    parent_span_id="aaaaaaaaaaaaaaaa")
-    return otlp.traces_data("run-0001", "0.1.0", [root, main, aux, ocr])
+    return otlp.encode_traces(samples.run_spans([
+        ("invoke_agent ocr-harness", samples.root_attributes(), None),
+        ("chat fake-model", samples.chat_attributes(), None),
+        ("chat fake-small", aux_attributes, "RATE_LIMITED"),
+        ("ocr", samples.ocr_attributes(), None),
+    ]))
 
 
 def test_one_row_per_model_call_span():
     rows = ledger.model_calls([_run()])
-    assert [row["spanId"] for row in rows] == ["bbbbbbbbbbbbbbbb", "cccccccccccccccc"]
+    assert [row["requestModel"] for row in rows] == ["fake-model", "fake-small"]
 
 
 def test_row_carries_item_and_condition_from_the_root_span():
@@ -38,7 +36,7 @@ def test_row_uses_platform_usage_names():
     assert (row["provider"], row["routeDecisionId"]) == ("external", "route-default")
     assert (row["modelRole"], row["authRoute"], row["requestModel"]) == ("main", "subscription_oauth", "fake-model")
     assert (row["cacheReadInputTokens"], row["cacheWriteInputTokens"]) == (25000, 1200)
-    assert row["durationMs"] == 0  # 나노초 3 → 0ms (내림)
+    assert row["durationMs"] >= 0
 
 
 def test_unknown_cost_is_none_and_errors_are_kept():
