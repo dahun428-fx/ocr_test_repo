@@ -222,3 +222,28 @@ def test_common_does_not_import_project_code():
     for path in Path(ocr_harness.common.__file__).parent.glob("*.py"):
         imports = [line for line in path.read_text(encoding="utf-8").splitlines() if line.startswith(("import ", "from "))]
         assert not [line for line in imports if "ocr_harness.project" in line or "ocr_harness.pharma" in line], path.name
+
+
+# 좌표 없는 오인식 판정 ---------------------------------------------------------
+
+def _total(text):
+    return TotalExtractor().extract({"total": {"text": text, "box": [0, 0, 100, 20]}})[0]
+
+
+def test_text_only_judgement_ignores_position():
+    # 좌표를 주지 못하는 OCR(비전 모델)용. 글자가 전체 글 어디에든 있으면 맞게 읽은 것으로 봅니다.
+    extractor = TotalExtractor()
+    assert extractor.is_misread_text(_total("12,000원"), ["영수증", "합계 12000 KRW"]) is False
+    assert extractor.is_misread_text(_total("12,000원"), ["합계 72000 KRW"]) is True
+    assert extractor.is_misread_text(_total("12,000원"), []) is True
+
+
+def test_text_only_judgement_does_not_join_separate_lines():
+    # 줄을 그냥 이어 붙이면 앞줄 끝과 뒷줄 처음이 붙어 없는 글자가 생깁니다 ("12" + "000원").
+    assert TotalExtractor().is_misread_text(_total("12,000원"), ["12", "000원"]) is True
+
+
+def test_text_only_judgement_requires_every_word():
+    field = Field("name", "B", (Token("합성", (0, 0, 1, 1)), Token("정", (2, 0, 3, 1))))
+    assert TotalExtractor().is_misread_text(field, ["합성 캡슐"]) is True
+    assert TotalExtractor().is_misread_text(field, ["합성", "정"]) is False

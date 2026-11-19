@@ -24,7 +24,7 @@ from ocr_harness.common.ocr import CachedOcr, compare_misreads, to_tokens  # noq
 from ocr_harness.common.ocr_paddle import PaddleOcrEngine  # noqa: E402
 # ocr_harness.project를 거치지 않고 필드 규칙만 가져옵니다. project는 추적 패키지(OpenTelemetry)까지 불러오는데,
 # OCR을 돌리는 PC 환경에는 그 버전이 없고 이 스크립트는 추적을 쓰지 않습니다.
-from ocr_harness.pharma.fields import extract_fields, is_misread  # noqa: E402
+from ocr_harness.pharma.fields import EXTRACTOR, extract_fields, is_misread  # noqa: E402
 
 KOREAN_REC = "korean_PP-OCRv5_mobile_rec"
 # 비교할 설정. 첫 번째가 기준(M1a에서 쓴 것)입니다.
@@ -94,6 +94,8 @@ def main() -> None:
                 verdict[f"{stem}|{field.name}"] = misread
                 counts[f"{field.name}:eligible"] += 1
                 counts[f"{field.name}:misread"] += misread
+                # 좌표 없는 판정도 함께 셉니다. 좌표를 주지 못하는 엔진(Sonnet 비전)과 같은 기준으로 견주기 위한 숫자입니다.
+                counts[f"{field.name}:misread_text"] += EXTRACTOR.is_misread_text(field, [line["text"] for line in lines])
                 if misread and field.name in B_FIELDS:
                     products_with_b_misread.add(product)
             if number % 25 == 0:
@@ -106,12 +108,14 @@ def main() -> None:
             "median_seconds_per_image": statistics.median(seconds) if seconds else None,
             "mean_lines_per_image": lines_total / len(chosen) if chosen else None,
             "fields": {
-                field: {"eligible": counts[f"{field}:eligible"], "ocr_misread": counts[f"{field}:misread"]}
+                field: {"eligible": counts[f"{field}:eligible"], "ocr_misread": counts[f"{field}:misread"],
+                        "ocr_misread_text_only": counts[f"{field}:misread_text"]}
                 for field in ("product-name", "active-ingredient", "expiry")
             },
             "b_type": {
                 "eligible": sum(counts[f"{f}:eligible"] for f in B_FIELDS),
                 "ocr_misread": sum(counts[f"{f}:misread"] for f in B_FIELDS),
+                "ocr_misread_text_only": sum(counts[f"{f}:misread_text"] for f in B_FIELDS),
                 "products_with_misread": len(products_with_b_misread),
             },
         }
