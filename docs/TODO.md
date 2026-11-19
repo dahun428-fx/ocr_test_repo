@@ -10,6 +10,9 @@
 - [ ] 실제 추적 파일을 OTel 수집기나 뷰어에 넣어 읽히는지 확인 (M3 기준선 실행 때)
 - [ ] M1b: 라벨 읽기(제품명, 단어 상자)를 수집 어댑터 한 곳으로 모으기. 지금은 `fields.py`와 탐색 스크립트 3개에 흩어져 있음
 - [ ] M1b: `spikes/m1a_field_restore.py`가 `fields.py`의 정규식·정규화를 복사해 쓰고 있고 내용이 조금 다름. PC에서 다시 돌려 숫자를 확인할 수 있을 때 `fields.py` 것을 가져다 쓰도록 고치기
+- [ ] OpenTelemetry Weaver로 속성 규칙을 정의·검사할 수 있는지 확인 ([open-source-adoption.md](open-source-adoption.md) 4절). 사용자 확인 후 진행
+- [ ] 각 단계에 들어갈 때 오픈소스 후보를 작은 확인 작업으로 검증 (M1b `mlcroissant`, M3 `jiwer`, M4 DuckDB와 추적 화면, M5 `bm25s`·`kiwipiepy`·`rapidfuzz`, M7 `scipy.stats`)
+- [ ] 사용자 결정: gitleaks 추가 여부(커밋 전 검사와 함께), M4에서 추적 뷰어를 쓸지("수집 서버를 두지 않는다" 규칙 조정 필요)
 - [ ] 인터페이스는 구현이 둘 이상 생기는 곳에만: 수집 어댑터(M1b, 데이터 형식별), 모델 경로(M3, 가짜 모델과 SDK). 상속 대신 Protocol과 함수 조합으로
 - [ ] M1a 결과 확인과 M1b(수집기) 착수 확정
 - [ ] 데이터 이용약관이 외부 모델 전송을 허용하는지 확인 (M3 선행 조건)

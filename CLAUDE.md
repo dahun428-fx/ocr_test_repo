@@ -16,6 +16,7 @@
 | [docs/HISTORY.md](docs/HISTORY.md) | 결정과 변경 기록 |
 | [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 (스키마 2.0.0: 추적·평가 이벤트는 OTLP JSON, 플랫폼 계약 0.2.0 대응) |
 | [docs/schema-standards-review.md](docs/schema-standards-review.md) | 1.0.0과 표준의 차이를 대조한 기록 (2.0.0의 근거) |
+| [docs/open-source-adoption.md](docs/open-source-adoption.md) | 오픈소스 도입 검토: 도입한 것, 단계별로 도입할 것, 도입하지 않는 것과 이유 |
 | [docs/m1a-results.md](docs/m1a-results.md) | M1a 탐색 결과 (집계 숫자) |
 
 ## 반드시 지킬 규칙
@@ -47,4 +48,5 @@
 - 토큰과 비용은 chat span에만 적습니다. 비용 장부는 거기서 뽑는 집계입니다 (`ocr_harness.ledger`).
 - 추적 기록에는 원문을 넣지 않습니다. 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다.
 - 스키마의 원본은 `tools/build_schemas.py`입니다. 바꿀 때는 버전을 올리고 `schemas/released/<버전>.json` 스냅샷을 추가합니다 (docs/schema-design.md 10절).
+- 직접 짜기 전에 표준 구현이나 오픈소스가 있는지 먼저 봅니다. 도입할 때는 라이선스를 원문으로 확인하고, 그 도구의 출력을 검증하는 테스트를 하나 둡니다 (docs/open-source-adoption.md).
 - 주석은 한글로 넉넉히 답니다. 무엇을 하는지보다 왜 그렇게 하는지를 적습니다.
