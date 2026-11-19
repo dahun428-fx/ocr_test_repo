@@ -36,6 +36,11 @@ CONFIGS = {
     "mobile-max960": PaddleOcrEngine("PP-OCRv5_mobile_det", KOREAN_REC, det_limit_side_len=960, det_limit_type="max"),
     # 큰 검출 모델 + 줄인 입력. 원본 크기(긴 변 약 3000)에서는 CPU로 1장에 15분이 넘어 쓸 수 없었습니다.
     "server-det-max960": PaddleOcrEngine("PP-OCRv5_server_det", KOREAN_REC, det_limit_side_len=960, det_limit_type="max"),
+    # 960이 원본 크기보다 훨씬 나았으므로, 가장 좋은 크기가 어디인지 사이 값을 더 봅니다.
+    **{
+        f"{size}-max{side}": PaddleOcrEngine(f"PP-OCRv5_{size.split('-')[0]}_det", KOREAN_REC, det_limit_side_len=side, det_limit_type="max")
+        for size, side in (("mobile", 736), ("mobile", 1280), ("mobile", 1600), ("mobile", 1920), ("server-det", 1280))
+    },
 }
 BASELINE = "mobile"
 B_FIELDS = ("product-name", "active-ingredient")
