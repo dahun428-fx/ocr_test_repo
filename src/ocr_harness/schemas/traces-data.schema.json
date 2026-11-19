@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/traces-data.schema.json",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/traces-data.schema.json",
   "title": "tracesData",
   "description": "추적 파일의 한 줄. OTLP File Exporter 형식(JSON Lines, 한 줄이 TracesData)이고 OTLP JSON 인코딩을 따릅니다. 단계 1개가 span 1개, 모델 호출 1회가 chat span 1개입니다. 토큰과 비용은 chat span에만 적고 비용 장부는 거기서 뽑습니다. 원문은 넣지 않고 해시와 참조만 둡니다.",
   "type": "object",
@@ -145,7 +145,7 @@
                             "properties": {
                               "stringValue": {
                                 "type": "string",
-                                "const": "2.0.0"
+                                "const": "2.1.0"
                               }
                             },
                             "required": [
@@ -2289,7 +2289,8 @@
                                         "type": "string",
                                         "enum": [
                                           "main",
-                                          "auxiliary"
+                                          "auxiliary",
+                                          "ocr"
                                         ]
                                       }
                                     },
@@ -2297,7 +2298,7 @@
                                       "stringValue"
                                     ],
                                     "additionalProperties": false,
-                                    "description": "주 모델인지, SDK가 따로 부른 보조 모델인지."
+                                    "description": "주 모델인지, SDK가 따로 부른 보조 모델인지, OCR 단계에서 이미지를 읽은 모델인지."
                                   }
                                 }
                               }
@@ -2406,7 +2407,7 @@
                                       "intValue"
                                     ],
                                     "additionalProperties": false,
-                                    "description": "SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트)."
+                                    "description": "SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트). 하네스가 셀 수 없는 입력(이미지)이면 속성을 뺍니다."
                                   }
                                 }
                               }
@@ -3570,19 +3571,6 @@
                                     "properties": {
                                       "key": {
                                         "const": "platform.route_decision.id"
-                                      }
-                                    },
-                                    "required": [
-                                      "key"
-                                    ]
-                                  }
-                                },
-                                {
-                                  "contains": {
-                                    "type": "object",
-                                    "properties": {
-                                      "key": {
-                                        "const": "ocr.usage.hidden_context_tokens"
                                       }
                                     },
                                     "required": [

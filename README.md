@@ -37,7 +37,7 @@ pytest -q
 | --- | --- |
 | `research-plan.md` | 무엇을 왜 재는가. 연구 질문, 조건, 가설, 통계, 비용 측정 |
 | `implementation-plan.md` | 어떤 순서로 만드는가. M0~M8 단계와 관문 |
-| `schema-design.md` | 기록 형식의 설계와 근거 (스키마 2.0.0) |
+| `schema-design.md` | 기록 형식의 설계와 근거 (스키마 2.1.0) |
 | `open-source-adoption.md` | 오픈소스 도입 판단과 이유 |
 | `m1a-results.md` | M1a 탐색의 집계 숫자와 관문 판단 |
 | `TODO.md` | 남은 일과 사용자 확인 대기 항목 |
@@ -56,10 +56,15 @@ pytest -q
 | `ids.py` | 플랫폼 id와 RFC 8785 해시 | id 접두사 (인자) |
 | `repo_guard.py` | 저장소에 올리면 안 되는 파일을 찾는 `RepoGuard` | 규칙 목록. `SuffixRule`, `AllowedFolderRule`, `EmailRule`, `ContentPatternRule`을 조립하거나 `Rule`을 상속 (전략) |
 | `fields.py` | 위치가 있는 글자 조각(`Token`), 필드(`Field`), 읽는 순서, 오인식 판정 | `FieldExtractor`를 상속해 `extract`를 구현하고 정규화 규칙(`Normalizer`)을 지정 |
+| `ocr.py` | OCR 엔진의 틀 `OcrEngine`, 설정별 캐시 `CachedOcr`, 설정 해시 | `OcrEngine`을 상속해 `config`와 `read`를 구현 |
+| `ocr_paddle.py` | PaddleOCR 엔진 (`PaddleOcrEngine`). PaddleOCR이 설치된 곳에서만 불러옴 | 모델 이름과 입력 크기 (값) |
+| `model_route.py` | 모든 모델 호출이 지나는 한 곳 `ModelRoute`. 호출마다 chat span 하나를 남김. 가짜 모델 `FakeBackend`, 가격표 `PriceTable` | 백엔드(`ModelBackend` 상속)와 가격표 (값) |
+| `model_agent_sdk.py` | Claude Agent SDK 구독 인증 백엔드 (`AgentSdkBackend`). SDK가 설치되고 로그인된 PC에서만 동작 | 없음 |
+| `ocr_vision.py` | 이미지를 모델 경로로 보내 글자를 받는 OCR 엔진 (`VisionOcrEngine`) | 모델 이름, 프롬프트, 이미지 긴 변 (값) |
 
 ### 이 연구의 설정 (`src/ocr_harness/project.py`)
 
-공용 틀에 이 연구의 이름을 끼우는 한 곳입니다. `PROFILE`, `SCHEMAS`, `TELEMETRY`, `LEDGER`, `GUARD`를 만들고, 거기에 묶인 함수를 내놓습니다: `validate`, `bundle`, `resource`, `tracer`, `logger`, `model_calls`, `item_id`, `find_violations`, `extract_fields`, `is_misread`. 나머지 코드와 테스트는 이 함수들을 부릅니다. 다른 프로젝트는 이 파일에 해당하는 것 하나와 자기 도메인 폴더만 새로 쓰면 됩니다.
+공용 틀에 이 연구의 이름을 끼우는 한 곳입니다. `PROFILE`, `SCHEMAS`, `TELEMETRY`, `LEDGER`, `GUARD`를 만들고, 거기에 묶인 함수를 내놓습니다: `validate`, `bundle`, `resource`, `tracer`, `logger`, `model_calls`, `item_id`, `find_violations`, `extract_fields`, `is_misread`. 모델 이름·프롬프트·가격표(`PRICES`, `VISION_OCR_*`)도 여기 있습니다. 나머지 코드와 테스트는 이 함수들을 부릅니다. 다른 프로젝트는 이 파일에 해당하는 것 하나와 자기 도메인 폴더만 새로 쓰면 됩니다.
 
 ### 이 프로젝트 전용 코드 (`src/ocr_harness/pharma/`)
 
@@ -81,7 +86,7 @@ pytest -q
 | `raw-payload.schema.json` | 저장소 밖에 두는 원문 기록의 형식 | 공용 |
 | `platform/0.2.0/*.json` | 플랫폼 계약 사본 2개 (평가 결과 `evaluation`, 지식 문서 `knowledgeDocument`는 `retrieval.schema.json`의 문서 형식). 고치지 않음 | 공용 |
 | `otel-genai/76e0c19e7fe1/*` | OTel 메시지 스키마 사본 2개와 출처·라이선스 안내. 고치지 않음 | 공용 |
-| `released/2.0.0.json` | 스키마 2.0.0 전체를 묶은 동결 스냅샷 | - |
+| `released/2.1.0.json` | 스키마 2.1.0 전체를 묶은 동결 스냅샷 | - |
 
 위 다섯 개 `*.schema.json`과 스냅샷은 손으로 고치지 않고 `tools/build_schemas.py`가 만듭니다.
 
@@ -102,3 +107,5 @@ pytest -q
 | `tests/test_fields.py` | 필드 추출과 오인식 판정 |
 | `tests/test_kb_match.py` | 식약처 매칭 |
 | `tests/test_repo_guard.py` | 저장소 검사. 이 저장소의 추적 파일 전체도 검사 |
+| `tests/test_model_route.py` | 모델 호출 경로, 비전 OCR 엔진 (가짜 모델) |
+| `tools/ocr_vision_pilot.py` | Sonnet 비전 OCR 파일럿: 제품당 1장을 읽어 오인식 수와 토큰·비용 집계 (PC에서 실행, `--fake`는 어디서든) |

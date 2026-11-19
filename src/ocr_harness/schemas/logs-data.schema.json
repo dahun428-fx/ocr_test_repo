@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/logs-data.schema.json",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/logs-data.schema.json",
   "title": "logsData",
   "description": "평가 이벤트 파일의 한 줄. OTLP File Exporter 형식(한 줄이 LogsData)입니다. 채점 1건이 OTel GenAI 규약의 gen_ai.evaluation.result 이벤트 1개입니다. 조건 × 지표의 집계는 플랫폼 evaluation 기록에 따로 적습니다.",
   "type": "object",
@@ -145,7 +145,7 @@
                             "properties": {
                               "stringValue": {
                                 "type": "string",
-                                "const": "2.0.0"
+                                "const": "2.1.0"
                               }
                             },
                             "required": [

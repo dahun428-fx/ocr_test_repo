@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/raw-payload.schema.json",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/raw-payload.schema.json",
   "title": "rawPayload",
   "description": "원문 저장 기록. 추적에는 원문을 넣지 않으므로 여기에 두고 해시로 참조합니다. 저장소에 올리지 않고 사용자 PC에만 둡니다.",
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "const": "2.0.0",
+      "const": "2.1.0",
       "description": "이 기록이 따르는 스키마 묶음의 버전."
     },
     "recordType": {
@@ -31,7 +31,7 @@
     "digest": {
       "type": "string",
       "pattern": "^sha256:[a-f0-9]{64}$",
-      "description": "content의 SHA-256 (ocr_harness.ids.content_digest). span은 `raw://` + 이 값으로 참조합니다."
+      "description": "content의 SHA-256 (ocr_harness.common.ids.content_digest). span은 `raw://` + 이 값으로 참조합니다."
     },
     "kind": {
       "enum": [

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/condition-manifest.schema.json",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/condition-manifest.schema.json",
   "title": "conditionManifest",
-  "description": "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.ids.manifest_digest).",
+  "description": "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.common.ids.manifest_digest).",
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "const": "2.0.0",
+      "const": "2.1.0",
       "description": "이 기록이 따르는 스키마 묶음의 버전."
     },
     "recordType": {

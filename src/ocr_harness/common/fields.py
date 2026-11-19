@@ -101,3 +101,17 @@ class FieldExtractor(ABC):
             if norm(word.text) not in norm("".join(l.text for l in near)):
                 return True
         return False
+
+    def is_misread_text(self, field: Field, ocr_texts: list[str]) -> bool:
+        """좌표 없이 글자만으로 보는 오인식 판정. 필드의 단어 하나라도 어느 OCR 줄에도 없으면 오인식입니다.
+
+        좌표를 믿을 만하게 주지 못하는 OCR(비전 모델)에 씁니다. is_misread보다 느슨합니다:
+        같은 글자가 문서의 다른 자리에 있어도 맞게 읽은 것으로 칩니다. 그래서 두 판정의 숫자를 한 표에서 견주지 않고,
+        엔진끼리 견줄 때는 모든 엔진을 이 판정으로 다시 셉니다.
+        줄끼리 이어 붙이지 않는 이유: 앞줄 끝과 뒷줄 처음이 붙어 실제로는 없는 글자가 만들어지기 때문입니다.
+        대신 한 단어가 두 줄로 쪼개져 읽힌 경우는 오인식으로 잡힙니다 (보수적인 쪽).
+        """
+        norm = self.normalizer
+        lines = [norm(text) for text in ocr_texts]
+        return any(not any(norm(word.text) in line for line in lines) for word in field.tokens)
+

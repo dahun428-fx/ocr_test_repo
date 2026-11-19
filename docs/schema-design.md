@@ -1,4 +1,4 @@
-# 스키마 설계 (스키마 2.0.0)
+# 스키마 설계 (스키마 2.1.0)
 
 상태: **확정, 구현 완료.** 2026-11-19에 사용자가 두 번 결정했습니다. (1) 플랫폼 계약에 맞춘 v2 권고 5건 채택(1.0.0), (2) 표준 형식에 맞추는 수정안 7건 전부 채택(2.0.0). 1.0.0은 실행 기록을 만든 적이 없어 스냅샷을 두지 않습니다.
 
@@ -59,7 +59,7 @@
 
 ## 4. item, conditionManifest
 
-둘 다 `schemaVersion`(상수 `2.0.0`)과 `recordType`을 가집니다.
+둘 다 `schemaVersion`(상수 `2.1.0`)과 `recordType`을 가집니다.
 
 **item** (평가 항목 1건): `itemId`(`img-` + 이미지 해시 앞 32자), `imageDigest`, `datasetVersion`(SemVer), `sourceFormat`, `domain`, `productId`(분할과 통계의 군집 단위), `split`(dev/test), `image{width,height}`, `classification`(플랫폼 분류 4종), `fields[]`(`fieldId`, `queryType` A/B/C, `gold`, `evidenceDocumentId`○), `queries[]`○, `tags[]`○. 정의하지 않은 키는 거부하므로 촬영자 개인정보가 들어올 수 없습니다.
 
@@ -93,8 +93,10 @@ span 종류 (`name`의 첫 단어)와 필수 속성:
 | `retrieval {자료원}` | 검색 | `gen_ai.operation.name`, `gen_ai.data_source.id`, `gen_ai.retrieval.top_k`, `gen_ai.retrieval.documents`(id, score + rank, selected), `ocr.retrieval.query.digest` |
 | `context` | 컨텍스트 구성 | `ocr.context.template.digest`, `ocr.context.order`, `ocr.context.tokens.{instruction,ocr,documents,history,image}` |
 | `history` | 이력 선별 (M8) | `ocr.history.candidates`, `ocr.history.excluded` |
-| `chat {모델}` | **모델 호출 1회** (재시도, 보조 모델도 각각) | `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `ocr.prompt.digest`, `ocr.model.role`(main/auxiliary), `ocr.model.auth_route`, `ocr.model.attempt`, `platform.model.provider`, `platform.route_decision.id`, `ocr.usage.hidden_context_tokens`, `ocr.cost.price_table.version` |
+| `chat {모델}` | **모델 호출 1회** (재시도, 보조 모델도 각각) | `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `ocr.prompt.digest`, `ocr.model.role`(main/auxiliary), `ocr.model.auth_route`, `ocr.model.attempt`, `platform.model.provider`, `platform.route_decision.id`, `ocr.cost.price_table.version` |
 | `postprocess` | 후처리 | `platform.guardrail.mode`(check_only/enforce), `ocr.postprocess.kind`, `ocr.postprocess.rules`, `ocr.output.before.digest`, `ocr.output.after.digest` |
+
+**2.1.0에서 넓힌 것 (2026-11-19).** `ocr.model.role`에 `ocr`을 더했습니다. 비전 모델(Sonnet)이 OCR을 하는 엔진에서는 OCR 단계도 모델 호출이라 chat span으로 남기고, 주 모델·보조 모델과 구분합니다. `ocr.usage.hidden_context_tokens`는 필수에서 선택으로 바꿨습니다. 이미지가 든 입력은 하네스가 토큰을 셀 방법이 없어서, 모르는 값을 0으로 적지 않고 속성을 뺍니다. 둘 다 기존 기록을 깨지 않는 변경이라 부 버전만 올렸습니다. 2.0.0으로 만든 실제 기록이 없어 그 스냅샷은 지웠습니다.
 
 chat span의 선택 속성: `gen_ai.system_instructions_ref`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.reasoning.output_tokens`, `gen_ai.input.messages_ref`, `gen_ai.output.messages_ref`, `ocr.cost.sdk_reported_usd`, `ocr.cost.computed_usd`, `ocr.cost.basis`, `ocr.sdk.num_turns`, `ocr.sdk.duration_api_ms`. 그 밖의 선택 속성은 원문 참조인 `ocr.output.ref`(ocr span)와 `ocr.retrieval.query.ref`(retrieval span)입니다.
 
@@ -155,7 +157,7 @@ chat span의 선택 속성: `gen_ai.system_instructions_ref`, `gen_ai.response.m
 | 스키마의 원본 (표로 정의) | `tools/build_schemas.py` |
 | 만들어진 스키마 JSON | `src/ocr_harness/schemas/*.schema.json` |
 | 가져온 사본 (고치지 않음) | `schemas/platform/0.2.0/`, `schemas/otel-genai/76e0c19e7fe1/` |
-| 동결 스냅샷 | `schemas/released/2.0.0.json` |
+| 동결 스냅샷 | `schemas/released/2.1.0.json` |
 | 검증 | `ocr_harness.project.validate(kind, record)` (틀은 `ocr_harness.common.schema.SchemaRegistry`) |
 | 추적·평가 이벤트 쓰기 | OpenTelemetry SDK + 공식 JSON 인코더. `ocr_harness.common.otlp`는 파일 내보내기(`JsonLinesSpanExporter`, `JsonLinesLogExporter`)와 `Telemetry`, `finish`, `emit_evaluation`만 더함. 이 연구의 이름을 실은 `resource`, `tracer`, `logger`는 `ocr_harness.project`에 있음 |
 | 추적 읽기 | `ocr_harness.common.otlp`의 `plain_attributes`, `flatten_spans` |

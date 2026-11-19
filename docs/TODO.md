@@ -4,27 +4,32 @@
 
 ## 사용자 확인 대기
 
-- [ ] M1a 결과 확인과 M1b(수집기) 착수 확정
-- [ ] GitHub 저장소 설정에서 Secret scanning과 Push protection 켜기 (소유자만 가능, [open-source-adoption.md](open-source-adoption.md) 6절)
-- [ ] 데이터 이용약관이 외부 모델 전송을 허용하는지 확인 (M3 선행 조건)
+- [ ] **주 지표와 표본 계획 재검토.** 152장에서 오인식 필드가 Sonnet 7, PaddleOCR 10~15뿐이라 지금 주 지표는 검정할 수 없음 ([m1b-results.md](m1b-results.md) 4절)
+- [ ] PaddleOCR 엔진 설정 고정 (Claude 권고: server 검출, 긴 변 960)
+- [ ] GitHub Secret scanning과 Push protection: 사용자가 2026-11-19에 켰다고 알림. Claude 쪽에서는 설정을 읽지 못해 확인하지 못함 (저장소 Settings → Code security 화면에서 한 번 확인)
 - [ ] 데이터 공식 설명서 확보 (라벨 유형 코드 정의)
-- [ ] 추가 데이터의 규모와 도착 시점
+- [ ] 추가 데이터: 샘플 작업을 끝낸 뒤 주기로 함 (사용자, 2026-11-19)
 - [ ] 이력 선별 실험(M8)의 연속 질의 세션 정의 (2차 이후)
 - [ ] 구독 한도에 막힐 때 API 키 경로를 대안으로 둘지
 - [ ] 보고서·영수증 도메인을 언제 추가할지
 
 ## 1차: 세로 한 줄
 
-M0(저장소 골격, 스키마 2.0.0)과 M1a(탐색)는 끝났습니다. 내용은 [HISTORY.md](HISTORY.md)와 [m1a-results.md](m1a-results.md)에 있습니다.
+M0(저장소 골격, 스키마 2.1.0)과 M1a(탐색)는 끝났습니다. 내용은 [HISTORY.md](HISTORY.md)와 [m1a-results.md](m1a-results.md)에 있습니다.
 
 ### M1b 수집기
 - [ ] OCR 설정 민감도 확인 (mobile·server 모델, 입력 크기)과 엔진 고정
+- [ ] Sonnet에 보내는 이미지 긴 변(지금 1568, 근거 없이 잡은 값)과 가격표의 캐시 쓰기·Haiku 단가를 공식 문서로 확인
+- [ ] 모델 입력·출력 원문을 저장소 밖 rawPayload로 남기기 (지금은 OCR 캐시에 읽은 줄만 남음)
+- [ ] 가격표의 캐시 쓰기 단가를 5분·1시간으로 나누고 SDK의 분할 값을 읽어 계산 (지금은 5분 단가로만 계산해 SDK 보고의 약 0.63배)
+- [ ] 글자만 판정의 오인식 건(Sonnet 7, PaddleOCR 10)을 PC에서 눈으로 확인
+- [ ] PC 실행 환경 정리: 지금은 기존 두 venv의 패키지를 PYTHONPATH로 함께 읽는 임시 구성. 이 연구 전용 환경을 만들지는 사용자 확인 필요 (설치가 따름)
+- [ ] 파일럿 뒤: 주 가설을 둘 엔진과 다중 비교 처리를 정해 research-plan.md에 반영
 - [ ] 패키징 형식 어댑터
 - [ ] 내용 해시 기반 항목 id, 데이터 버전 스냅샷
 - [ ] 제품 단위 고정 해시 분할
 - [ ] PII 제거
 - [ ] 데이터 품질 리포트 (빈 글자, 유형 코드 분포, 형식 차이)
-- [ ] 다음에 스키마 버전을 올릴 때: 스키마 설명 글의 모듈 경로(`ocr_harness.ids`)를 새 위치(`ocr_harness.common.ids`)로 고치기 (항목 id는 이제 `ocr_harness.project.item_id`). 2.0.0은 동결이라 그대로 둠
 - [ ] M1a 숫자 중 스크립트로 재현되지 않는 것을 수집기로 다시 계산해 대조 ([m1a-results.md](m1a-results.md) "재현 범위"). 유효성분명 적격 수 차이(156~157·119제품 대 157·120제품)의 원인 확인
 - [ ] 평가셋마다 Croissant 1.1 설명 파일 (`mlcroissant` 확인 포함. 라이선스·출처는 데이터 이용약관 확인 후)
 - [ ] 라벨 읽기(제품명, 단어 상자)를 수집 어댑터 한 곳으로 모으기. 지금은 `pharma/fields.py`와 탐색 스크립트 3개에 흩어져 있음. 공용 `FieldExtractor`처럼 기반 클래스를 공용에 두고 패키징 형식마다 자식을 둠

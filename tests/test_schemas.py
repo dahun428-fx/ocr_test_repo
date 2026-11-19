@@ -504,3 +504,17 @@ def test_missing_attribute_error_names_the_attribute():
     drop_attribute(samples.the_span(data), "ocr.model.role")
     with pytest.raises(SchemaError, match="필수 속성 없음: ocr.model.role"):
         validate("tracesData", data)
+
+
+# 2.1.0에서 넓힌 것 ------------------------------------------------------------
+
+def test_chat_span_may_be_an_ocr_stage_model_call():
+    # 비전 모델이 OCR을 하는 엔진에서는 OCR 단계도 모델 호출입니다. 주 모델·보조 모델과 구분해 적습니다.
+    validate("tracesData", samples.traces("chat fake-model", samples.chat_attributes() | {"ocr.model.role": "ocr"}))
+
+
+def test_chat_span_may_omit_hidden_context_tokens_when_the_harness_cannot_count():
+    # 이미지가 든 입력은 하네스가 토큰을 셀 방법이 없습니다. 모르는 값을 0으로 적지 않고 속성을 뺍니다.
+    attributes = samples.chat_attributes()
+    del attributes["ocr.usage.hidden_context_tokens"]
+    validate("tracesData", samples.traces("chat fake-model", attributes))
