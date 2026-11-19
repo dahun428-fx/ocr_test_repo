@@ -1,7 +1,8 @@
 """id와 해시 만들기. 형식은 플랫폼 계약 0.2.0의 id·digest 규칙을 따릅니다."""
 import hashlib
-import json
 import re
+
+import rfc8785
 
 # 플랫폼 계약의 해시 형식. 괄호 안이 16진수 64자리입니다.
 DIGEST = re.compile(r"^sha256:([a-f0-9]{64})$")
@@ -16,8 +17,26 @@ def item_id(image_digest: str) -> str:
     return "img-" + found.group(1)[:32]
 
 
+def canonical_json(value) -> bytes:
+    """RFC 8785(JSON Canonicalization Scheme)로 정규화한 JSON 바이트.
+
+    키 정렬, 공백 제거, 숫자와 문자열 표기가 표준으로 정해져 있어서
+    다른 언어로 구현해도 같은 내용이면 같은 바이트가 나옵니다.
+    """
+    return rfc8785.dumps(value)
+
+
+def _sha256(data: bytes) -> str:
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
 def manifest_digest(manifest: dict) -> str:
-    """조건 선언의 해시. 키 순서와 공백에 영향받지 않도록 정규화한 JSON으로 계산합니다."""
-    # 키를 정렬하고 공백을 없애면, 같은 내용은 항상 같은 글자열이 됩니다.
-    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    """조건 선언의 해시 (플랫폼 manifestDigest). 키 순서와 공백에 영향받지 않습니다."""
+    return _sha256(canonical_json(manifest))
+
+
+def content_digest(content) -> str:
+    """rawPayload.content의 해시. 글자열은 UTF-8 바이트 그대로, 구조가 있는 값은 정규화한 JSON으로 계산합니다."""
+    if isinstance(content, str):
+        return _sha256(content.encode("utf-8"))
+    return _sha256(canonical_json(content))

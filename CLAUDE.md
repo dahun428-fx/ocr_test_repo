@@ -14,8 +14,8 @@
 | [docs/implementation-plan.md](docs/implementation-plan.md) | 구현 플랜 v3 (M0~M8), 증분 데이터 규칙, 관문 |
 | [docs/TODO.md](docs/TODO.md) | 지금 할 일과 사용자 확인 대기 항목 |
 | [docs/HISTORY.md](docs/HISTORY.md) | 결정과 변경 기록 |
-| [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 v2 (기록 8종, 플랫폼 계약 0.2.0·OTel 대응, 구현 완료) |
-| [docs/schema-standards-review.md](docs/schema-standards-review.md) | 스키마 표준 대조와 수정안 (스키마 2.0.0 제안, 확인 대기) |
+| [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 (스키마 2.0.0: 추적·평가 이벤트는 OTLP JSON, 플랫폼 계약 0.2.0 대응) |
+| [docs/schema-standards-review.md](docs/schema-standards-review.md) | 1.0.0과 표준의 차이를 대조한 기록 (2.0.0의 근거) |
 | [docs/m1a-results.md](docs/m1a-results.md) | M1a 탐색 결과 (집계 숫자) |
 
 ## 반드시 지킬 규칙
@@ -42,6 +42,9 @@
 - 문서와 주석은 한국어로 씁니다.
 - 결정이 바뀌면 `docs/HISTORY.md`에 날짜와 이유를 적고, `docs/TODO.md`를 갱신합니다.
 - 테스트를 먼저 쓰고 구현합니다. 채점기와 스키마는 정답이 알려진 합성 항목으로 단위 테스트합니다.
-- 저장 형식은 JSONL 파일입니다. DB나 수집 서버는 두지 않고, 기록의 키는 플랫폼 계약과 같은 camelCase와 형식 규칙을 쓰고, `attributes` 안의 측정값 이름은 OpenTelemetry GenAI 규약(`gen_ai.*`)과 `platform.*`, `ocr.*` 접두사를 씁니다.
-- 추적 기록(span)에는 원문을 넣지 않습니다. 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다.
-- 스키마를 바꿀 때는 버전을 올리고 `schemas/released/<버전>.json` 스냅샷을 추가합니다 (docs/schema-design.md 10절).
+- 저장 형식은 JSONL 파일입니다. DB나 수집 서버는 두지 않습니다.
+- **표준이 있으면 그 형식을 그대로 씁니다.** 추적과 평가 이벤트는 OTLP JSON(OTLP File Exporter 형식)이고 `ocr_harness.otlp`로 쓰고 읽습니다. 속성 이름은 OpenTelemetry GenAI 규약(`gen_ai.*`), 플랫폼 개념(`platform.*`), 이 연구의 자체 정의(`ocr.*`)로 접두사를 나눕니다. 새 이름을 정할 때는 규약 원문에 같은 뜻의 이름이 있는지 먼저 확인합니다.
+- 토큰과 비용은 chat span에만 적습니다. 비용 장부는 거기서 뽑는 집계입니다 (`ocr_harness.ledger`).
+- 추적 기록에는 원문을 넣지 않습니다. 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다.
+- 스키마의 원본은 `tools/build_schemas.py`입니다. 바꿀 때는 버전을 올리고 `schemas/released/<버전>.json` 스냅샷을 추가합니다 (docs/schema-design.md 10절).
+- 주석은 한글로 넉넉히 답니다. 무엇을 하는지보다 왜 그렇게 하는지를 적습니다.

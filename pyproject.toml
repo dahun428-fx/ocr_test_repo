@@ -7,7 +7,7 @@ name = "ocr-harness"
 version = "0.0.1"
 description = "OCR → 하네스 → Claude 평가 주도 개발(EDD) 체계"
 requires-python = ">=3.11"
-dependencies = ["jsonschema>=4.20"]
+dependencies = ["jsonschema>=4.20", "referencing>=0.30", "rfc8785>=0.1.4"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]

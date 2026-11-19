@@ -1,43 +1,51 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/condition-manifest.schema.json",
   "title": "conditionManifest",
-  "description": "조건 하나의 불변 선언. 이 기록의 해시가 manifestDigest입니다.",
+  "description": "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.ids.manifest_digest).",
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "const": "1.0.0"
+      "const": "2.0.0",
+      "description": "이 기록이 따르는 스키마 묶음의 버전."
     },
     "recordType": {
-      "const": "conditionManifest"
+      "const": "conditionManifest",
+      "description": "기록 종류. JSONL 한 파일에 여러 종류가 섞여도 구분할 수 있게 합니다."
     },
     "conditionId": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+      "pattern": "^[a-z][a-z0-9.-]{1,63}$",
+      "description": "조건 id (c0~c4, ck 등). 닫힌 목록이 아닙니다."
     },
     "version": {
       "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "조건 선언의 버전. 플랫폼 evaluation 계약의 agentVersion에 들어갑니다."
     },
     "model": {
       "type": "object",
       "properties": {
         "requestModel": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "요청할 모델 id (OTel gen_ai.request.model과 같은 값)."
         },
         "authRoute": {
           "enum": [
             "subscription_oauth",
             "api_key",
             "fake"
-          ]
+          ],
+          "description": "인증 경로. 구독, API 키, 가짜 모델의 결과를 섞지 않기 위해 적습니다."
         }
       },
       "required": [
         "requestModel",
         "authRoute"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "모델 설정."
     },
     "components": {
       "type": "object",
@@ -52,11 +60,13 @@
               "properties": {
                 "id": {
                   "type": "string",
-                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$",
+                  "description": "구현 id."
                 },
                 "version": {
                   "type": "string",
-                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "description": "구현 버전."
                 }
               },
               "required": [
@@ -65,7 +75,8 @@
               ],
               "additionalProperties": false
             }
-          ]
+          ],
+          "description": "OCR 엔진. 쓰지 않으면 null (키는 생략할 수 없습니다)."
         },
         "retrieval": {
           "oneOf": [
@@ -77,11 +88,13 @@
               "properties": {
                 "id": {
                   "type": "string",
-                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$",
+                  "description": "구현 id."
                 },
                 "version": {
                   "type": "string",
-                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "description": "구현 버전."
                 }
               },
               "required": [
@@ -90,7 +103,8 @@
               ],
               "additionalProperties": false
             }
-          ]
+          ],
+          "description": "검색. 쓰지 않으면 null (키는 생략할 수 없습니다)."
         },
         "context": {
           "oneOf": [
@@ -102,11 +116,13 @@
               "properties": {
                 "id": {
                   "type": "string",
-                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$",
+                  "description": "구현 id."
                 },
                 "version": {
                   "type": "string",
-                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "description": "구현 버전."
                 }
               },
               "required": [
@@ -115,7 +131,8 @@
               ],
               "additionalProperties": false
             }
-          ]
+          ],
+          "description": "컨텍스트 구성. 쓰지 않으면 null (키는 생략할 수 없습니다)."
         },
         "history": {
           "oneOf": [
@@ -127,11 +144,13 @@
               "properties": {
                 "id": {
                   "type": "string",
-                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$",
+                  "description": "구현 id."
                 },
                 "version": {
                   "type": "string",
-                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "description": "구현 버전."
                 }
               },
               "required": [
@@ -140,7 +159,8 @@
               ],
               "additionalProperties": false
             }
-          ]
+          ],
+          "description": "이력 선별. 쓰지 않으면 null (키는 생략할 수 없습니다)."
         },
         "postprocess": {
           "oneOf": [
@@ -152,11 +172,13 @@
               "properties": {
                 "id": {
                   "type": "string",
-                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                  "pattern": "^[a-z][a-z0-9.-]{1,63}$",
+                  "description": "구현 id."
                 },
                 "version": {
                   "type": "string",
-                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "description": "구현 버전."
                 }
               },
               "required": [
@@ -165,7 +187,8 @@
               ],
               "additionalProperties": false
             }
-          ]
+          ],
+          "description": "출력 후처리. 쓰지 않으면 null (키는 생략할 수 없습니다)."
         }
       },
       "required": [
@@ -175,30 +198,36 @@
         "history",
         "postprocess"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "하네스 단계별 구현."
     },
     "promptTemplateDigest": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "프롬프트 틀의 SHA-256."
     },
     "knowledgeIndexVersion": {
       "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "검색 색인의 버전. 검색을 쓰지 않으면 생략합니다."
     },
     "sdk": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "SDK 이름."
         },
         "version": {
           "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "SDK 버전."
         },
         "cliVersion": {
           "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "CLI 버전."
         }
       },
       "required": [
@@ -206,18 +235,22 @@
         "version",
         "cliVersion"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "모델 호출에 쓰는 SDK. 버전에 따라 숨은 컨텍스트가 달라져 고정합니다."
     },
     "policyVersion": {
       "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "플랫폼 evaluation 계약의 필수 값. 이 연구에서는 0.0.0으로 고정합니다."
     },
     "platformContractVersion": {
-      "const": "0.2.0"
+      "const": "0.2.0",
+      "description": "가져온 플랫폼 계약의 버전."
     },
     "semconvCommit": {
       "type": "string",
-      "pattern": "^[a-f0-9]{7,40}$"
+      "pattern": "^[a-f0-9]{7,40}$",
+      "description": "속성 이름의 근거로 삼은 OTel GenAI 시맨틱 규약의 커밋."
     }
   },
   "required": [

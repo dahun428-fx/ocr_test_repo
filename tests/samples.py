@@ -1,16 +1,24 @@
-"""스키마 테스트용 합성 레코드. 실제 데이터나 개인정보를 넣지 않습니다."""
+"""스키마 테스트용 합성 기록. 실제 데이터나 개인정보를 넣지 않습니다.
 
-D = "sha256:" + "a" * 64
-TRACE = "0123456789abcdef0123456789abcdef"
-SPAN = "0123456789abcdef"
-V = "1.0.0"
+추적(tracesData)과 평가 이벤트(logsData)는 OTLP JSON 형식이라 손으로 쓰면 길어집니다.
+그래서 ocr_harness.otlp의 도우미로 만들고, 형식 자체는 tests/test_otlp.py에서 글자 그대로 확인합니다.
+"""
+from ocr_harness import otlp
+
+D = "sha256:" + "a" * 64          # 형식만 맞춘 가짜 해시
+TRACE = "0123456789abcdef0123456789abcdef"   # traceId: 16진수 32자리
+SPAN = "0123456789abcdef"                    # spanId: 16진수 16자리
+PARENT = "fedcba9876543210"
+V = "2.0.0"                        # 스키마 버전
+ITEM = "img-" + "a" * 32
+T0, T1 = "1795050000000000000", "1795050001000000000"   # 유닉스 나노초 (문자열)
 
 
 def item():
     return {
         "schemaVersion": V,
         "recordType": "item",
-        "itemId": "img-" + "a" * 32,
+        "itemId": ITEM,
         "imageDigest": D,
         "datasetVersion": "1.0.0",
         "sourceFormat": "packaging-v1",
@@ -63,85 +71,143 @@ def condition_manifest():
     }
 
 
-def _span(name, attributes, **extra):
+# span 종류별 속성 (파이썬 값). otlp.span()이 OTLP 속성 배열로 바꿉니다. ---------------
+
+def root_attributes():
     return {
-        "schemaVersion": V,
-        "recordType": "span",
-        "runId": "run-0001",
-        "traceId": TRACE,
-        "spanId": SPAN,
-        "name": name,
-        "startTime": "2026-11-19T10:00:00+09:00",
-        "endTime": "2026-11-19T10:00:01+09:00",
-        "status": "ok",
-        "attributes": attributes,
-        **extra,
-    }
-
-
-def span_root():
-    return _span("invoke_agent ocr-harness", {
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.agent.name": "ocr-harness",
         "gen_ai.agent.version": "1.0.0",
-        "ocr.item.id": "img-" + "a" * 32,
+        "ocr.item.id": ITEM,
         "ocr.condition.id": "c4",
         "ocr.manifest.digest": D,
         "ocr.dataset.version": "1.0.0",
         "ocr.repeat": 0,
-        "platform.idempotency_key": "img-" + "a" * 32 + ".c4.1.0.0.r0",
+        "platform.idempotency_key": ITEM + ".c4.1.0.0.r0",
         "ocr.outcome": "ok",
-    })
+    }
 
 
-def span_ocr():
-    return _span("ocr", {
+def ocr_attributes():
+    return {
         "ocr.engine.name": "paddleocr",
         "ocr.engine.version": "3.7.0",
         "ocr.output.digest": D,
         "ocr.output.ref": "raw://" + D,
         "ocr.cache.hit": True,
-    }, parentSpanId="fedcba9876543210")
+    }
 
 
-def span_retrieval():
-    return _span("retrieval mfds", {
+def retrieval_attributes():
+    return {
         "gen_ai.operation.name": "retrieval",
         "gen_ai.data_source.id": "mfds",
         "gen_ai.retrieval.top_k": 5,
         "gen_ai.retrieval.documents": [{"id": "mfds-0001", "score": 0.9, "rank": 1, "selected": True}],
         "ocr.retrieval.query.digest": D,
-    }, parentSpanId="fedcba9876543210")
+    }
 
 
-def span_context():
-    return _span("context", {
+def context_attributes():
+    return {
         "ocr.context.template.digest": D,
         "ocr.context.order": ["instruction", "mfds-0001", "ocr"],
-        "ocr.context.tokens": {"instruction": 40, "ocr": 120, "documents": 300, "history": 0, "image": 0},
-    }, parentSpanId="fedcba9876543210")
+        "ocr.context.tokens.instruction": 40,
+        "ocr.context.tokens.ocr": 120,
+        "ocr.context.tokens.documents": 300,
+        "ocr.context.tokens.history": 0,
+        "ocr.context.tokens.image": 0,
+    }
 
 
-def span_chat():
-    return _span("chat fake-model", {
+def chat_attributes():
+    """모델 호출 1회. 토큰과 비용이 여기에만 적힙니다 (비용 장부는 이 span에서 뽑습니다)."""
+    return {
         "gen_ai.operation.name": "chat",
         "gen_ai.provider.name": "anthropic",
         "gen_ai.request.model": "fake-model",
+        "gen_ai.usage.input_tokens": 250,
+        "gen_ai.usage.output_tokens": 9,
+        "gen_ai.usage.cache_read.input_tokens": 25000,
+        "gen_ai.usage.cache_write.input_tokens": 1200,
         "gen_ai.input.messages_ref": "raw://" + D,
         "gen_ai.output.messages_ref": "raw://" + D,
         "ocr.prompt.digest": D,
-        "ocr.model_call.ids": ["mc-0001"],
-    }, parentSpanId="fedcba9876543210")
+        "ocr.model.role": "main",
+        "ocr.model.auth_route": "subscription_oauth",
+        "ocr.model.attempt": 0,
+        "platform.model.provider": "external",
+        "platform.route_decision.id": "route-default",
+        "ocr.usage.hidden_context_tokens": 24000,
+        "ocr.cost.sdk_reported_usd": 0.004,
+        "ocr.cost.computed_usd": 0.004,
+        "ocr.cost.price_table.version": "2026.11.19",
+    }
 
 
-def span_postprocess():
-    return _span("postprocess", {
+def postprocess_attributes():
+    return {
         "platform.guardrail.mode": "check_only",
         "ocr.postprocess.kind": "deterministic",
         "ocr.postprocess.rules": [{"id": "normalize-units", "result": "changed"}],
         "ocr.output.before.digest": D,
         "ocr.output.after.digest": D,
-    }, parentSpanId="fedcba9876543210")
+    }
+
+
+SPAN_KINDS = {
+    "invoke_agent ocr-harness": root_attributes,
+    "ocr": ocr_attributes,
+    "retrieval mfds": retrieval_attributes,
+    "context": context_attributes,
+    "chat fake-model": chat_attributes,
+    "postprocess": postprocess_attributes,
+}
+
+
+def traces(name="invoke_agent ocr-harness", attributes=None, **span_extra):
+    """span 하나가 든 추적 파일 한 줄 (OTLP TracesData)."""
+    if attributes is None:
+        attributes = SPAN_KINDS[name]()
+    parent = None if name.startswith("invoke_agent") else PARENT
+    one = otlp.span(TRACE, SPAN, name, T0, T1, attributes, parent_span_id=parent, **span_extra)
+    return otlp.traces_data("run-0001", "0.1.0", [one])
+
+
+def the_span(data):
+    """위 traces()가 만든 한 줄에서 span을 꺼냅니다 (테스트에서 고쳐 보려고)."""
+    return data["resourceSpans"][0]["scopeSpans"][0]["spans"][0]
+
+
+def score_attributes():
+    return {
+        "gen_ai.evaluation.name": "normalized_exact_match",
+        "gen_ai.evaluation.score.value": 1.0,
+        "gen_ai.evaluation.score.label": "correct",
+        "ocr.score.id": "sc-0001",
+        "ocr.item.id": ITEM,
+        "ocr.product.id": "prod-0001",
+        "ocr.condition.id": "c4",
+        "ocr.condition.version": "1.0.0",
+        "ocr.manifest.digest": D,
+        "ocr.dataset.version": "1.0.0",
+        "ocr.scorer.version": "1.0.0",
+        "ocr.target.kind": "field",
+        "ocr.target.id": "product-name",
+        "ocr.query.type": "B",
+        "ocr.ocr_misread": True,
+        "ocr.score.stage": "after_postprocess",
+    }
+
+
+def logs(attributes=None):
+    """채점 1건이 든 평가 이벤트 파일 한 줄 (OTLP LogsData)."""
+    event = otlp.evaluation_event(TRACE, SPAN, T1, score_attributes() if attributes is None else attributes)
+    return otlp.logs_data("run-0001", "0.1.0", [event])
+
+
+def the_event(data):
+    return data["resourceLogs"][0]["scopeLogs"][0]["logRecords"][0]
 
 
 def raw_payload():
@@ -153,59 +219,8 @@ def raw_payload():
         "spanId": SPAN,
         "digest": D,
         "kind": "output_messages",
-        "content": "{}",
+        "content": [{"role": "assistant", "parts": [{"type": "text", "content": "합성정"}], "finish_reason": "stop"}],
         "retention": "study",
-    }
-
-
-def model_call():
-    return {
-        "schemaVersion": V,
-        "recordType": "modelCall",
-        "runId": "run-0001",
-        "traceId": TRACE,
-        "spanId": SPAN,
-        "modelCallId": "mc-0001",
-        "itemId": "img-" + "a" * 32,
-        "conditionId": "c4",
-        "at": "2026-11-19T10:00:00+09:00",
-        "attempt": 0,
-        "modelRole": "main",
-        "authRoute": "subscription_oauth",
-        "provider": "external",
-        "routeDecisionId": "route-default",
-        "usage": {"inputTokens": 250, "outputTokens": 9},
-        "attributes": {
-            "gen_ai.request.model": "fake-model",
-            "gen_ai.usage.cache_read.input_tokens": 25000,
-            "gen_ai.usage.cache_write.input_tokens": 1200,
-            "ocr.usage.hidden_context_tokens": 24000,
-        },
-        "cost": {"sdkReportedUsd": 0.004, "computedUsd": 0.004, "priceTableVersion": "2026.11.19"},
-        "errorCode": None,
-        "durationMs": 900,
-    }
-
-
-def field_score():
-    return {
-        "schemaVersion": V,
-        "recordType": "fieldScore",
-        "runId": "run-0001",
-        "traceId": TRACE,
-        "scoreId": "sc-0001",
-        "itemId": "img-" + "a" * 32,
-        "productId": "prod-0001",
-        "target": {"kind": "field", "fieldId": "product-name"},
-        "queryType": "B",
-        "ocrMisread": True,
-        "metric": "normalized_exact_match",
-        "score": 1.0,
-        "stage": "after_postprocess",
-        "datasetVersion": "1.0.0",
-        "agentVersion": "1.0.0",
-        "manifestDigest": D,
-        "scorerVersion": "1.0.0",
     }
 
 
@@ -228,10 +243,8 @@ ALL = {
     "item": item,
     "knowledgeDocument": knowledge_document,
     "conditionManifest": condition_manifest,
-    "span": span_root,
+    "tracesData": traces,
+    "logsData": logs,
     "rawPayload": raw_payload,
-    "modelCall": model_call,
-    "fieldScore": field_score,
     "evaluation": evaluation,
 }
-SPANS = [span_root, span_ocr, span_retrieval, span_context, span_chat, span_postprocess]

@@ -1,285 +1,175 @@
-# 스키마 설계 v2
+# 스키마 설계 (스키마 2.0.0)
 
-상태: **확정, 구현 완료 (스키마 버전 1.0.0).** 2026-11-19 사용자가 9절의 권고 5건을 모두 채택했습니다. 구현은 `src/ocr_harness/schemas/`, 검증은 `tests/test_schemas.py`입니다.
+상태: **확정, 구현 완료.** 2026-11-19에 사용자가 두 번 결정했습니다. (1) 플랫폼 계약에 맞춘 v2 권고 5건 채택(1.0.0), (2) 표준 형식에 맞추는 수정안 7건 전부 채택(2.0.0, [schema-standards-review.md](schema-standards-review.md)).
 
-M0에서 만든 스키마 4종(v1)은 근거 대조 없이 이름을 정한 곳이 많았습니다. 이 문서는 (1) 근거를 원문으로 확인하고, (2) 나중에 [aiagent_platform_core_system_architecture](https://github.com/dahun428-fx/aiagent_platform_core_system_architecture)(이하 플랫폼)에 그대로 넣을 수 있는 구조로 다시 잡은 설계입니다.
+목표는 두 가지입니다. 공개 표준이 있는 곳은 그 형식을 그대로 쓰고, [aiagent_platform_core_system_architecture](https://github.com/dahun428-fx/aiagent_platform_core_system_architecture)(이하 플랫폼)에 바꾸지 않고 넣을 수 있게 합니다.
 
-## 1. 확인한 근거
+## 1. 근거
 
-| 근거 | 확인한 원문 | 여기서 가져오는 것 |
+| 근거 | 확인한 원문 | 여기서 쓰는 곳 |
 | --- | --- | --- |
-| 플랫폼 계약 | `contracts/*.schema.json` 0.2.0 (커밋 d3d0a9d) | 평가 결과, 검색 문서, 모델 결과·사용량, 오류 코드, id·버전·해시 형식 |
-| 플랫폼 문서 | `docs/observability.md`, `evaluation.md`, `guardrails.md`, `memory.md`, `versioning.md` | 추적 전파, 속성 이름 규칙, 원문 기록 금지, 검사 모드, 계약 동결 방식 |
-| OpenTelemetry GenAI 시맨틱 규약 | [semantic-conventions-genai](https://github.com/open-telemetry/semantic-conventions-genai) main, 커밋 76e0c19 (Development 단계) | span 이름, `gen_ai.*` 속성 이름 |
-| W3C Trace Context | 플랫폼 계약의 `traceparent`, `traceId` 패턴 | traceId 32자리, spanId 16자리 16진수 |
-| 선행 연구 실행 기록 | `E:\ocr-local-benchmark\research\runs\*\predictions.jsonl`의 `sdk.usage`, `sdk.model_usage`, `total_cost_usd_reported` | 주·보조 모델 분리, 캐시 토큰, SDK 보고 비용 |
-| 선행 문헌 | OHRBench (arXiv 2412.02592), Adding Error Bars to Evals (arXiv 2411.00640) | 단계별(OCR·검색·생성) 기록 분리, 채점 기록에 군집 단위(제품) 포함 |
+| OTLP 메시지 정의 | `opentelemetry-proto`의 `trace.proto`, `logs.proto` | 추적과 평가 이벤트의 키 구성 |
+| OTLP JSON 인코딩 | `opentelemetry-proto` `docs/specification.md` | id는 16진수 문자열, enum은 정수, 64비트 정수는 문자열 |
+| OTLP File Exporter | `opentelemetry-specification` `protocol/file-exporter.md` (Development 단계) | JSONL 파일, 한 줄이 `TracesData` 또는 `LogsData`, 한 파일에 한 종류 |
+| OTel GenAI 시맨틱 규약 | [semantic-conventions-genai](https://github.com/open-telemetry/semantic-conventions-genai) 커밋 76e0c19 (Development 단계) | span 이름, `gen_ai.*` 속성, `gen_ai.evaluation.result` 이벤트, 메시지 JSON 스키마 |
+| OTel `error.type` | GenAI 규약 문서의 인용 (Stable) | 오류 분류 속성 |
+| W3C Trace Context | 플랫폼 계약의 패턴 | traceId 32자리, spanId 16자리, 전부 0은 무효 |
+| RFC 8785 (JSON 정규화) | 구현체 `rfc8785` 패키지와 테스트로 확인 | 해시 계산 |
+| JSON Schema 2020-12, SemVer 2.0.0 | 원문을 이번에 다시 읽지 않음 | 스키마 파일, 버전 표기 |
+| 플랫폼 계약 0.2.0 | `contracts/*.schema.json` (커밋 d3d0a9d) | evaluation, knowledgeDocument, id·버전·해시 형식, 오류 코드 10종 |
+| 선행 연구 실행 기록 | `E:\ocr-local-benchmark`의 `predictions.jsonl` 키 | 주·보조 모델 분리, 캐시 토큰, SDK 보고 비용 |
+| MLCommons Croissant 1.1 | 명세 앞부분 원문 | 데이터셋 설명 파일 (M1b에서 추가) |
 
-선행 연구 `predictions.jsonl`의 키는 PC에서 원문으로 읽어 6.5절에 반영했습니다 (`sdk.usage`, `sdk.model_usage.<모델>`, `sdk.num_turns`, `sdk.duration_api_ms`, `sdk.total_cost_usd_reported`).
+## 2. 원칙
 
-## 2. 플랫폼 계약에서 확인한 형식 규칙
+1. **표준 형식이 있으면 그대로 씁니다.** 추적과 평가 이벤트는 OTLP JSON입니다. OTel 도구가 변환 없이 읽습니다.
+2. **플랫폼 계약이 있으면 그 파일을 그대로 씁니다.** evaluation과 knowledgeDocument는 사본이고 필드를 더하지 않습니다.
+3. **속성 이름은 접두사로 출처를 드러냅니다.** `gen_ai.*`, `error.type`, `service.*`는 OTel 규약, `platform.*`는 플랫폼 개념, `ocr.*`는 이 연구의 자체 정의입니다.
+4. **한 사실은 한 곳에만 적습니다.** 토큰과 비용은 chat span에만 있고, 비용 장부는 거기서 뽑는 집계입니다.
+5. **원문은 추적에 넣지 않습니다.** 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다. 속성 이름이 닫힌 목록이라 원문이 들어가는 이름은 스키마가 거부합니다.
+6. **조건은 불변 선언이고 해시로 묶습니다.** 해시는 RFC 8785 정규화 JSON의 SHA-256입니다.
+7. **스키마를 버전으로 동결합니다.** `schemas/released/<버전>.json` 스냅샷과 현재 스키마가 다르면 테스트가 실패합니다.
+8. **가져온 파일은 고치지 않습니다.** 플랫폼 계약과 OTel 메시지 스키마 사본은 테스트가 파일 해시를 대조합니다.
 
-v1은 이 규칙들과 어긋납니다.
-
-| 규칙 | 플랫폼 원문 | v1 상태 |
-| --- | --- | --- |
-| 키 이름 | camelCase (`datasetVersion`, `traceId`, `documentId`) | snake_case |
-| 식별자 | `^[a-z][a-z0-9.-]{1,63}$` | `sha256:…`를 id로 씀 (형식 위반) |
-| 버전 | `^[0-9]+\.[0-9]+\.[0-9]+$` (semver) | 자유 문자열 (`eval-v1`, `c1-v1`) |
-| 해시 | `^sha256:[a-f0-9]{64}$`, 이름은 `…Digest` | 형식은 같고 이름이 다름 |
-| 추적 | `traceId` 32자리 16진수, `traceparent` | 자유 문자열 (`tr-0001`) |
-| 오류 코드 | `problem.code` 10종 | 3종만 |
-| 사용량 | `usage.inputTokens`, `usage.outputTokens` | `gen_ai.usage.*`만 |
-| 닫힌 스키마 | `additionalProperties: false` | 같음. 단 trace의 단계 안쪽은 열려 있음 |
-| 원문 | 프롬프트·출력·검색 원문은 추적에 기록 금지. 평가 목적은 별도 승인과 보존 정책 | OCR 글자와 모델 원출력을 trace 안에 넣음 |
-| 속성 이름 | span 이름·속성은 OTel GenAI 규약. 플랫폼 고유 속성은 `platform.` 접두사 | 섞여 있음. `cache_creation`은 규약에 없는 이름 |
-| 계약 동결 | `contracts/released/<버전>.json` 스냅샷과 현재 계약이 같은지 테스트로 검사 | 없음 |
-
-## 3. 설계 원칙
-
-1. **플랫폼 계약이 있는 기록은 그 계약을 그대로 만족합니다.** 필드를 더하지 않습니다. 평가 결과와 검색 문서가 여기에 해당합니다.
-2. **플랫폼 계약이 없는 기록은 봉투(envelope)와 속성으로 나눕니다.** 봉투 키는 플랫폼과 같은 camelCase와 형식 규칙을 씁니다. 측정값은 `attributes` 안에 넣고 이름은 OTel `gen_ai.*`, 플랫폼 개념은 `platform.*`, 이 연구 고유는 `ocr.*` 접두사를 씁니다.
-3. **원문은 추적 기록에 넣지 않습니다.** 추적에는 해시와 참조만 두고, 원문은 저장소 밖의 내용 주소 저장소에 둡니다. OTel의 `gen_ai.input.messages_ref`, `gen_ai.output.messages_ref`와 같은 방식입니다. 플랫폼의 "평가 목적 원문 기록은 별도 승인·보존 정책" 조항에 맞습니다.
-4. **조건은 불변 선언(manifest)이고 해시로 묶습니다.** 플랫폼의 `agentVersion` + `manifestDigest`에 그대로 대응합니다.
-5. **스키마를 버전으로 동결합니다.** 플랫폼과 같은 방식으로 `schemas/released/<버전>.json` 스냅샷을 두고, 현재 스키마와 다르면 테스트가 실패합니다.
-6. **고정 값으로 채우는 자리는 표시해 둡니다.** 테넌트, 정책 버전처럼 연구에서 쓰지 않는 플랫폼 필수 값은 상수로 채우고, 플랫폼에 넣을 때 실제 값으로 바꿉니다.
-
-## 4. 기록 종류 (v1 4종 → v2 8종)
+## 3. 기록 종류
 
 ```
-데이터        item ──────────────┐
-지식베이스    knowledgeDocument  │   (플랫폼 retrieval 문서 형식)
-조건 선언     conditionManifest ─┤   (불변, digest)
+데이터        item ──────────────┐            자체 정의 (표준 없음)
+지식베이스    knowledgeDocument  │            플랫폼 계약 그대로
+조건 선언     conditionManifest ─┤            자체 정의 (표준 없음)
                                  ▼
-실행          span  (OTel span 형식, 실행 1회 = trace 1개 = span 여러 개)
-                ├─ rawPayload   (원문. 저장소 밖, 해시로 참조)
-                └─ modelCall    (비용 장부. 호출 1회 = 1줄)
-채점          fieldScore        (필드·질의 1건)
-                └─ evaluation   (조건 × 지표 집계. 플랫폼 evaluation 계약 그대로)
+실행          tracesData   추적 파일 한 줄    OTLP JSON. 단계 = span, 모델 호출 = chat span
+                └─ rawPayload   원문          자체 봉투 + OTel 메시지 스키마. 저장소 밖
+채점          logsData     평가 이벤트 한 줄  OTLP JSON. 채점 1건 = gen_ai.evaluation.result
+                └─ evaluation   집계          플랫폼 계약 그대로
+파생          비용 장부                        chat span에서 뽑음 (ocr_harness.ledger). 저장 형식 아님
 ```
 
-| v2 기록 | v1에서 | 바뀌는 이유 |
+| 종류 | 형식의 출처 | 파일 |
 | --- | --- | --- |
-| item | item | id·버전 형식, 질의 추가 |
-| knowledgeDocument | 없음 | 플랫폼 `retrieval.schema.json`의 문서 형식을 그대로 씀 |
-| conditionManifest | 없음 (문자열 `condition_version`만) | 조건을 해시로 고정해야 `manifestDigest`를 채울 수 있음 |
-| span | trace.steps | 단계를 OTel span으로. 단계 추가(M8 이력 등)에 스키마 변경이 필요 없음 |
-| rawPayload | trace 안의 원문 | 원문 기록 금지 규칙. 공개 저장소 규칙과도 맞음 |
-| modelCall | cost_ledger | 이름과 형식 정리, 플랫폼 `usage`·`routeDecisionId` 대응 |
-| fieldScore | eval_record | 필드 외에 질의·이미지 단위 채점도 받음, 군집 단위(제품) 포함 |
-| evaluation | 없음 | 플랫폼 계약 그대로. EDD 관문의 통과·실패 기록 |
+| item | 자체 정의. id·버전·해시 형식은 플랫폼 | `item.schema.json` |
+| knowledgeDocument | 플랫폼 `retrieval.schema.json`의 문서 형식 | `platform/0.2.0/` |
+| conditionManifest | 자체 정의 | `condition-manifest.schema.json` |
+| tracesData | OTLP `TracesData` + 속성 규칙 | `traces-data.schema.json` |
+| logsData | OTLP `LogsData` + 속성 규칙 | `logs-data.schema.json` |
+| rawPayload | 자체 봉투. 메시지는 OTel 메시지 스키마 | `raw-payload.schema.json`, `otel-genai/76e0c19e7fe1/` |
+| evaluation | 플랫폼 `evaluation.schema.json` | `platform/0.2.0/` |
 
-## 5. 공통 봉투
+키와 속성 하나하나의 뜻은 스키마 파일의 `description`에 한글로 적혀 있습니다. 아래는 구조와 이유만 적습니다.
 
-플랫폼 계약이 없는 기록(item, conditionManifest, span, rawPayload, modelCall, fieldScore)은 아래 키를 공통으로 가집니다.
+## 4. item, conditionManifest
 
-| 키 | 형식 | 근거 |
+둘 다 `schemaVersion`(상수 `2.0.0`)과 `recordType`을 가집니다.
+
+**item** (평가 항목 1건): `itemId`(`img-` + 이미지 해시 앞 32자), `imageDigest`, `datasetVersion`(SemVer), `sourceFormat`, `domain`, `productId`(분할과 통계의 군집 단위), `split`(dev/test), `image{width,height}`, `classification`(플랫폼 분류 4종), `fields[]`(`fieldId`, `queryType` A/B/C, `gold`, `evidenceDocumentId`○), `queries[]`○, `tags[]`○. 정의하지 않은 키는 거부하므로 촬영자 개인정보가 들어올 수 없습니다.
+
+**conditionManifest** (조건 하나의 불변 선언): `conditionId`(닫힌 목록 아님), `version`(플랫폼 `agentVersion`), `model{requestModel, authRoute}`, `components{ocr, retrieval, context, history, postprocess}`(각각 `{id, version}` 또는 `null`), `promptTemplateDigest`, `knowledgeIndexVersion`○, `sdk{name, version, cliVersion}`, `policyVersion`(`0.0.0` 고정), `platformContractVersion`(`0.2.0`), `semconvCommit`. 이 기록의 RFC 8785 해시가 `manifestDigest`입니다.
+
+## 5. tracesData (추적)
+
+파일 한 줄이 OTLP `TracesData`입니다. 보통 실행 1회(항목 × 조건 × 반복)의 span 전부를 한 줄에 담습니다.
+
+```json
+{"resourceSpans":[{
+  "resource":{"attributes":[{"key":"service.name","value":{"stringValue":"ocr-harness"}}, …]},
+  "scopeSpans":[{"scope":{"name":"ocr_harness","version":"0.1.0"},
+    "spans":[{"traceId":"…32자리","spanId":"…16자리","parentSpanId":"…","name":"chat claude-sonnet",
+              "kind":1,"startTimeUnixNano":"1795050000000000000","endTimeUnixNano":"1795050001000000000",
+              "attributes":[{"key":"gen_ai.usage.input_tokens","value":{"intValue":"250"}}, …],
+              "status":{"code":1}}]}]}]}
+```
+
+- resource 속성(필수): `service.name`(`ocr-harness`), `service.version`, `ocr.run.id`, `ocr.schema.version`.
+- 시간은 유닉스 나노초 문자열, `kind`와 `status.code`는 정수, 속성은 `[{key, value}]` 배열입니다. 모두 OTLP JSON 규칙입니다.
+- `status.code`가 2(ERROR)이면 `error.type` 속성이 있어야 하고, 값은 플랫폼 오류 코드 10종입니다.
+- 속성 값에 "없음"은 적을 수 없습니다. 모르는 값은 속성을 뺍니다.
+
+span 종류 (`name`의 첫 단어)와 필수 속성:
+
+| span | 언제 | 필수 속성 |
 | --- | --- | --- |
-| `schemaVersion` | semver | 플랫폼 versioning. v1에 없던 것 |
-| `recordType` | 기록 종류 이름 (상수) | JSONL 한 파일에 섞여도 구분 |
-| `runId` | 플랫폼 id 패턴 | 실행 묶음 (span, rawPayload, modelCall, fieldScore. item과 conditionManifest는 실행과 무관하므로 없음) |
-| `traceId` | 32자리 16진수 | W3C, 플랫폼 `evaluation.traceId` (item·conditionManifest 제외) |
+| `invoke_agent ocr-harness` | 실행 1회 (루트) | `gen_ai.operation.name`, `gen_ai.agent.name`, `gen_ai.agent.version`, `ocr.item.id`, `ocr.condition.id`, `ocr.manifest.digest`, `ocr.dataset.version`, `ocr.repeat`, `platform.idempotency_key`, `ocr.outcome`(ok/refused/empty/error) |
+| `ocr` | OCR 실행 또는 캐시 읽기 | `ocr.engine.name`, `ocr.engine.version`, `ocr.output.digest`, `ocr.cache.hit` |
+| `retrieval {자료원}` | 검색 | `gen_ai.operation.name`, `gen_ai.data_source.id`, `gen_ai.retrieval.top_k`, `gen_ai.retrieval.documents`(id, score + rank, selected), `ocr.retrieval.query.digest` |
+| `context` | 컨텍스트 구성 | `ocr.context.template.digest`, `ocr.context.order`, `ocr.context.tokens.{instruction,ocr,documents,history,image}` |
+| `history` | 이력 선별 (M8) | `ocr.history.candidates`, `ocr.history.excluded` |
+| `chat {모델}` | **모델 호출 1회** (재시도, 보조 모델도 각각) | `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `ocr.prompt.digest`, `ocr.model.role`(main/auxiliary), `ocr.model.auth_route`, `ocr.model.attempt`, `platform.model.provider`, `platform.route_decision.id`, `ocr.usage.hidden_context_tokens`, `ocr.cost.price_table.version` |
+| `postprocess` | 후처리 | `platform.guardrail.mode`(check_only/enforce), `ocr.postprocess.kind`, `ocr.postprocess.rules`, `ocr.output.before.digest`, `ocr.output.after.digest` |
 
-## 6. 기록별 정의
+chat span의 선택 속성: `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.reasoning.output_tokens`, `gen_ai.input.messages_ref`, `gen_ai.output.messages_ref`, `ocr.cost.sdk_reported_usd`, `ocr.cost.computed_usd`, `ocr.cost.basis`, `ocr.sdk.num_turns`, `ocr.sdk.duration_api_ms`.
 
-필수는 ●, 선택은 ○입니다.
+선행 연구 기록과의 대응: SDK 결과 1건의 `sdk.model_usage`에는 모델별 항목이 있습니다(주 모델과 보조 Haiku). 모델 하나당 chat span 하나로 풀어 적고 `ocr.model.role`로 구분합니다. `cacheCreationInputTokens`는 `gen_ai.usage.cache_write.input_tokens`, `costUSD`는 `ocr.cost.sdk_reported_usd`, `costBasis`는 `ocr.cost.basis`가 됩니다. 실패한 호출도 span을 남기고 토큰을 0으로 적습니다.
 
-### 6.1 item
+**비용 장부**는 저장 형식이 아니라 `ocr_harness.ledger.model_calls()`가 chat span에서 뽑는 행입니다. 행의 키는 플랫폼 `model-result`와 같은 이름(`usage.inputTokens`, `usage.outputTokens`, `provider`, `routeDecisionId`)입니다.
 
-| 키 | 필수 | 형식 | 근거·비고 |
-| --- | --- | --- | --- |
-| `itemId` | ● | 플랫폼 id 패턴. `img-` + 이미지 해시 앞 32자 | v1은 해시 전체를 id로 써서 패턴 위반 |
-| `imageDigest` | ● | `sha256:…` | 플랫폼 `…Digest` 이름 규칙 |
-| `datasetVersion` | ● | semver | 플랫폼 evaluation. `eval-v1` → `1.0.0` |
-| `sourceFormat`, `domain` | ● | 문자열 | 증분 데이터 규칙 (형식 어댑터) |
-| `productId` | ● | 플랫폼 id 패턴 | 통계 군집 단위 (Adding Error Bars) |
-| `split` | ● | `dev` / `test` | CLAUDE.md 규칙 5 |
-| `image` | ● | `width`, `height` | |
-| `classification` | ● | `public` / `internal` / `confidential` / `restricted` | 플랫폼 데이터 분류. 이용약관 확인 결과를 여기에 기록 |
-| `fields[]` | ● | `fieldId`, `queryType`(A/B/C), `gold`, `evidenceDocumentId`○ | 설계 v3. gold는 인쇄된 값 |
-| `queries[]` | ○ | `queryId`, `queryType`, `question`, `answer`, `evidenceDocumentId`○ | v1에 없던 것. 주 과제의 질의응답 |
-| `tags[]` | ○ | 플랫폼 id 패턴의 문자열 배열 | 분석용 표시 (예: 촬영 조건) |
+## 6. logsData (평가 이벤트)
 
-촬영자 개인정보 키는 정의하지 않으므로 들어올 수 없습니다 (닫힌 스키마).
+파일 한 줄이 OTLP `LogsData`이고, 채점 1건이 `eventName`이 `gen_ai.evaluation.result`인 LogRecord 하나입니다. `traceId`와 `spanId`는 채점한 출력을 만든 span을 가리킵니다 (규약: 평가 대상 span에 붙임).
 
-### 6.2 knowledgeDocument
-
-플랫폼 `retrieval.schema.json`의 `documents[]` 항목과 **같은 스키마**입니다. 추가 필드가 없습니다.
-
-| 키 | 값 | 비고 |
+| 속성 | 필수 | 출처 |
 | --- | --- | --- |
-| `documentId` | 플랫폼 id 패턴 | 식약처 품목기준코드에서 만듦 |
-| `content` | 문서 본문 | 저장소 밖에 저장 |
-| `citation` | 출처 URL (URI 형식만 허용) | 받은 날짜는 색인 목록에 기록 |
-| `classification` | `public` | 공개 근거 자료만 색인 (CLAUDE.md 규칙 3) |
-| `tenantId` | `ocr-research` (고정) | 원칙 6 |
-| `allowedPrincipals` | `["ocr-research"]` (고정) | 플랫폼 id 패턴의 문자열 배열. 원칙 6 |
+| `gen_ai.evaluation.name`, `gen_ai.evaluation.score.value` | ● | OTel |
+| `gen_ai.evaluation.score.label` | ○ | OTel |
+| `ocr.score.id`, `ocr.item.id`, `ocr.product.id` | ● | 자체. `ocr.product.id`는 제품 단위 신뢰구간·검정용 |
+| `ocr.condition.id`, `ocr.condition.version`, `ocr.manifest.digest`, `ocr.dataset.version`, `ocr.scorer.version` | ● | 자체. 플랫폼 evaluation의 `agentVersion`, `manifestDigest`, `datasetVersion`에 대응 |
+| `ocr.target.kind`(field/query/item), `ocr.target.id`(field·query일 때 필수) | ● | 자체 |
+| `ocr.query.type`(A/B/C), `ocr.ocr_misread` | ○ | 자체. 주 지표의 분모 표시 |
+| `ocr.score.stage`(before_postprocess/after_postprocess) | ● | 자체 |
 
-색인 목록(문서 id, 내용 해시, 색인 버전)은 conditionManifest가 참조합니다.
+OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 섞일 수 있어 받지 않습니다.
 
-### 6.3 conditionManifest
+## 7. rawPayload, evaluation, knowledgeDocument
 
-조건 하나의 불변 선언입니다. 이 파일의 해시가 `manifestDigest`입니다.
+**rawPayload**: `runId`, `traceId`, `spanId`, `digest`, `kind`, `content`, `retention`. `kind`가 `input_messages`, `output_messages`이면 `content`는 OTel 메시지 JSON 스키마(메시지마다 `role`과 `parts[]`)를 따르고, `ocr_output`, `retrieval_query`, `postprocess_output`이면 글자열입니다. `digest`는 글자열이면 UTF-8 바이트의, 구조가 있으면 RFC 8785 정규화 JSON의 SHA-256입니다. 저장소에 올리지 않습니다.
 
-| 키 | 필수 | 형식 | 플랫폼 대응 |
-| --- | --- | --- | --- |
-| `conditionId` | ● | `c0`~`c4`, `ck` 등. 닫힌 목록이 아님 | Manifest `metadata.id` |
-| `version` | ● | semver | `agentVersion` |
-| `model` | ● | 요청 모델 id, 인증 경로 | `gen_ai.request.model` |
-| `components` | ● | ocr, retrieval, context, history, postprocess 각각의 구현 id와 버전, 또는 `null`(없음) | Manifest `capabilities` |
-| `promptTemplateDigest` | ● | `sha256:…` | `gen_ai.prompt.name`, `gen_ai.prompt.version` |
-| `knowledgeIndexVersion` | ○ | semver | 플랫폼 `knowledgeId` |
-| `sdk` | ● | SDK·CLI 버전 | 연구 계획 §10 (버전 고정) |
-| `policyVersion` | ● | semver. 연구에서는 `0.0.0` 고정 | 플랫폼 evaluation 필수 값 (원칙 6) |
-| `platformContractVersion` | ● | `0.2.0` 고정 | 가져온 플랫폼 계약 버전 |
-| `semconvCommit` | ● | OTel 규약 커밋 | 플랫폼 observability "규격 버전을 고정하고 기록" |
+**evaluation**: 플랫폼 계약 그대로 (`evaluationId`, `datasetVersion`, `agentVersion`, `manifestDigest`, `policyVersion`, `metric`, `score`, `threshold`, `passed`, `traceId`). 조건 × 지표의 집계 한 줄이고 EDD 관문의 판정 기록입니다. 신뢰구간, 표본 수, p값은 이 계약에 자리가 없어 별도 통계 리포트에 두고 `evaluationId`로 연결합니다.
 
-플랫폼의 정식 Agent Manifest(`agent.platform/v1alpha1`)는 identity, governance, deployment까지 요구하므로 지금은 만들지 않습니다. 넣을 때 이 선언에서 변환합니다.
+**knowledgeDocument**: 플랫폼 계약 그대로 (`documentId`, `content`, `citation`(URI), `classification`, `tenantId`, `allowedPrincipals`). 연구에서는 `tenantId`를 `ocr-research`, `allowedPrincipals`를 `["ocr-research"]`로 고정합니다.
 
-### 6.4 span
+## 8. 표준이 없어 자체 정의인 것
 
-실행 1회(항목 × 조건 × 반복)가 trace 하나이고, 단계마다 span 한 줄입니다.
+- A/B/C 질의 유형, OCR 오인식 표시, 후처리 전·후 단계: 이 연구의 설계입니다.
+- 비용(USD) 속성 `ocr.cost.*`: OTel GenAI 규약에 비용 속성이 없습니다.
+- `ocr`, `context`, `history`, `postprocess` span: 규약에 해당 작업 이름이 없습니다.
+- item과 conditionManifest의 구조: 공통 표준이 없습니다.
+- OTel GenAI 규약과 OTLP File Exporter는 Development 단계라 바뀔 수 있습니다. 커밋을 고정했고, 올릴 때마다 차이를 대조합니다.
 
-| 키 | 필수 | 형식 | 근거 |
-| --- | --- | --- | --- |
-| `traceId`, `spanId`, `parentSpanId`○ | ● | 32 / 16 / 16자리 16진수 | W3C Trace Context |
-| `name` | ● | 아래 표 | OTel span 이름 규칙 |
-| `startTime`, `endTime` | ● | RFC 3339 | OTel |
-| `status` | ● | `ok` / `error` | OTel span status |
-| `errorCode` | ○ | 플랫폼 `problem.code` 10종 | status가 error이면 필수 |
-| `attributes` | ● | 아래 표의 이름만 허용. span 종류마다 필수 속성이 있음 | 원칙 2 |
-
-span 종류와 속성:
-
-| span `name` | 언제 | 주요 속성 |
-| --- | --- | --- |
-| `invoke_agent ocr-harness` (루트) | 실행 1회 | `gen_ai.agent.name`, `gen_ai.agent.version`, `ocr.item.id`, `ocr.condition.id`, `ocr.manifest.digest`, `ocr.dataset.version`, `ocr.repeat`, `platform.idempotency_key`, `ocr.outcome`(ok / refused / empty / error) |
-| `ocr` | OCR 실행 또는 캐시 읽기 | `ocr.engine.name`, `ocr.engine.version`, `ocr.output.digest`, `ocr.output.ref`, `ocr.cache.hit` |
-| `retrieval {data_source}` | 검색 | `gen_ai.operation.name`=`retrieval`, `gen_ai.data_source.id`, `gen_ai.retrieval.top_k`, `gen_ai.retrieval.documents`(id, score, 여기에 rank·selected 추가), `ocr.retrieval.query.digest`, `ocr.retrieval.query.ref` |
-| `context` | 컨텍스트 구성 | `ocr.context.template.digest`, `ocr.context.order`(문서 id 순서), `ocr.context.tokens.*`(지시문, OCR, 문서, 이력, 이미지) |
-| `history` | 이력 선별 (M8) | `ocr.history.candidates`, `ocr.history.excluded`(턴 id와 사유) |
-| `chat {model}` | 모델 호출 | `gen_ai.operation.name`=`chat`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.input.messages_ref`, `gen_ai.output.messages_ref`, `ocr.prompt.digest`, `ocr.model_call.ids` |
-| `postprocess` | 후처리 | `platform.guardrail.mode`(`check_only` / `enforce`), `ocr.postprocess.kind`(`deterministic` / `requery`), `ocr.postprocess.rules`(규칙 id와 결과), `ocr.output.before.digest`, `ocr.output.after.digest` |
-
-- 검색 질의 원문은 OTel에 `gen_ai.retrieval.query.text`가 있지만, OCR 글자가 들어가므로 원칙 3에 따라 해시와 참조만 둡니다.
-- 후처리의 "검사만" 모드는 플랫폼 guardrails의 검사 모드 구분과 같은 개념입니다.
-- 단계가 늘어도 span 종류만 추가하면 됩니다.
-
-### 6.5 modelCall (비용 장부)
-
-모델 호출 1회가 1줄입니다. 재시도와 보조 모델 호출도 각각 1줄입니다.
-
-| 키 | 필수 | 형식 | 근거 |
-| --- | --- | --- | --- |
-| `modelCallId` | ● | 플랫폼 id 패턴 | |
-| `traceId`, `spanId` | ● | | 어느 `chat` span의 호출인지 |
-| `itemId`, `conditionId`, `at` | ● | | v1에 없어 항목·시간별 비용을 바로 볼 수 없었음 |
-| `attempt` | ● | 0 이상 | 재시도 비용 |
-| `modelRole` | ● | `main` / `auxiliary` | 선행 연구: 호출마다 보조 Haiku 사용 |
-| `authRoute` | ● | `subscription_oauth` / `api_key` / `fake` | CLAUDE.md 실행 환경 |
-| `provider` | ● | `external` / `self-hosted` | 플랫폼 `model-result.provider` |
-| `routeDecisionId` | ● | 플랫폼 id 패턴 | 플랫폼 `model-result.routeDecisionId`. 모델 경로 한 곳을 지났다는 기록 |
-| `usage.inputTokens`, `usage.outputTokens` | ● | 0 이상 정수 | 플랫폼 `model-result.usage` 그대로 |
-| `attributes` | ● | 필수: `gen_ai.request.model`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `ocr.usage.hidden_context_tokens`(SDK 입력 합계 − 하네스가 센 합계). 선택: `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.reasoning.output_tokens`, `gen_ai.usage.image.input_tokens`, `ocr.sdk.num_turns`, `ocr.sdk.duration_api_ms`. 이 밖의 이름은 거부 | OTel. v1의 `cache_creation`은 규약에 없는 이름이라 `cache_write`로 고침 |
-| `cost` | ● | `sdkReportedUsd`, `computedUsd` (모를 때는 `null`, 키는 필수), `priceTableVersion`, `basis`○ | 선행 연구 `total_cost_usd_reported`. 구독에서는 청구액이 아닌 환산값 |
-| `errorCode` | ● | 플랫폼 `problem.code` 또는 `null` | |
-| `durationMs` | ● | | |
-
-선행 연구 기록과의 대응: SDK 결과 1건의 `sdk.model_usage`에는 모델별 항목이 들어 있습니다(주 모델과 보조 Haiku). 모델 하나당 modelCall 1줄로 풀어 적고 `modelRole`로 구분합니다. `cacheCreationInputTokens`는 `gen_ai.usage.cache_write.input_tokens`로, `costUSD`는 `cost.sdkReportedUsd`로, `costBasis`는 `cost.basis`로 옮깁니다.
-
-### 6.6 rawPayload
-
-원문 저장 기록입니다. **저장소에 올리지 않고** 사용자 PC의 `E:\ocr-harness-data`에만 둡니다.
-
-| 키 | 필수 | 형식 |
-| --- | --- | --- |
-| `digest` | ● | `sha256:…` (내용 주소) |
-| `kind` | ● | `ocr_output` / `retrieval_query` / `input_messages` / `output_messages` / `postprocess_output` |
-| `content` | ● | 원문 |
-| `traceId`, `spanId` | ● | |
-| `retention` | ● | 보존 기한 또는 `study` |
-
-### 6.7 fieldScore
-
-채점 1건입니다.
-
-| 키 | 필수 | 형식 | 근거 |
-| --- | --- | --- | --- |
-| `scoreId` | ● | 플랫폼 id 패턴 | |
-| `traceId`, `itemId`, `productId` | ● | | productId는 제품 단위 CI·검정용 |
-| `target` | ● | `{kind: field, fieldId}` / `{kind: query, queryId}` / `{kind: item}` | v1은 필드만 가능했음 |
-| `queryType` | ○ | A / B / C | |
-| `ocrMisread` | ○ | 불리언 | 주 지표의 분모 표시 |
-| `metric` | ● | 문자열 | 플랫폼 `metric`, OTel `gen_ai.evaluation.name` |
-| `score` | ● | 숫자 | 플랫폼 `score`, OTel `gen_ai.evaluation.score.value`. v1의 `value`를 고침 |
-| `stage` | ● | `before_postprocess` / `after_postprocess` | 설계 v3 |
-| `datasetVersion`, `agentVersion`, `manifestDigest`, `scorerVersion` | ● | semver, semver, 해시, semver | 플랫폼 evaluation과 같은 이름 |
-
-### 6.8 evaluation
-
-플랫폼 `evaluation.schema.json`을 **그대로** 씁니다. 추가 필드가 없습니다. 조건 × 지표의 집계 한 줄이고, EDD 관문의 판정 기록입니다.
-
-| 키 | 이 연구에서 채우는 값 |
-| --- | --- |
-| `evaluationId` | 실행 묶음·조건·지표로 만든 id |
-| `datasetVersion` | 평가셋 버전 |
-| `agentVersion`, `manifestDigest` | conditionManifest의 버전과 해시 |
-| `policyVersion` | `0.0.0` 고정 (원칙 6) |
-| `metric`, `score` | 지표 이름, 집계 점수 |
-| `threshold`, `passed` | 관문 기준과 통과 여부 |
-| `traceId` | 집계 작업의 trace |
-
-신뢰구간, 표본 수, p값은 이 계약에 자리가 없습니다. 별도 통계 리포트에 두고 `evaluationId`로 연결합니다. 플랫폼 계약에 통계 필드를 더하는 것은 플랫폼 쪽 ADR 대상이라 여기서 정하지 않습니다.
-
-## 7. 플랫폼에 넣는 경로
+## 9. 플랫폼에 넣는 경로
 
 | 이 저장소 | 플랫폼 | 필요한 작업 |
 | --- | --- | --- |
-| evaluation | Evaluation (`evaluation.schema.json`) | 없음. 그대로 등록 |
-| knowledgeDocument | Knowledge (`retrieval.schema.json`) | tenantId, allowedPrincipals를 실제 값으로 |
-| span | Observability (OTel exporter) | JSONL → OTLP 변환. 이름은 이미 규약 |
-| modelCall | Agent Gateway 모델 경로의 비용 귀속 | `usage`, `routeDecisionId`가 이미 같은 이름 |
-| conditionManifest | Agent Manifest + Tuning | identity·governance·deployment를 채워 변환 |
-| postprocess의 검사 모드 | Guardrails 집행 지점 ① | 규칙을 검사 서비스 adapter로 |
-| history span | Memory (단기) | Memory 규칙 적용 (비신뢰 데이터 취급) |
-| rawPayload | 평가 목적 원문 기록 (TBD-12) | 승인·보존 정책 확정 후 |
-| errorCode | `problem.code` | 없음 |
-
-가져오지 않는 것은 그대로입니다: Identity, Credential Broker, 사람 승인, 테넌트 구분.
-
-## 8. v1에서 바꾸는 것 요약
-
-1. 키 이름을 camelCase로, id·버전·해시·traceId를 플랫폼 형식으로.
-2. trace 한 덩어리를 OTel span 여러 줄로.
-3. 원문을 추적 기록에서 빼고 rawPayload로.
-4. 조건을 conditionManifest로 선언하고 해시로 묶음.
-5. 채점을 fieldScore(건별)와 evaluation(집계, 플랫폼 계약)으로 나눔.
-6. knowledgeDocument 추가 (플랫폼 계약).
-7. 오류 코드를 플랫폼 10종으로.
-8. `cache_creation` → `cache_write`, `value` → `score`.
-9. 모든 기록에 `schemaVersion`, 스냅샷 동결 테스트.
-10. item에 질의와 데이터 분류 추가.
-
-## 9. 사용자가 정한 것 (2026-11-19, 모두 권고대로 채택)
-
-| 결정 | 권고 | 이유 |
-| --- | --- | --- |
-| 봉투는 camelCase, 측정값은 `attributes` 안의 OTel 이름으로 나누는 방식 | 채택 | 플랫폼 계약과 OTel 규약을 둘 다 만족하는 유일한 방법. v1의 "필드 이름을 OTel에 맞춘다"는 CLAUDE.md 문구는 고쳐야 함 |
-| 버전을 semver로 (`eval-v1` → `1.0.0`) | 채택 | 플랫폼 evaluation 계약의 필수 형식 |
-| trace를 span 여러 줄로 | 채택 | 플랫폼 observability가 요구(MUST). 대시보드에서는 traceId로 묶어 읽음 |
-| 플랫폼 계약 버전 고정 | 0.2.0 | 현재 released 최신 |
-| 통계 값(CI, p값)의 자리 | 별도 리포트 | 플랫폼 계약 변경은 플랫폼 ADR 대상 |
+| evaluation | Evaluation | 없음 |
+| knowledgeDocument | Knowledge | `tenantId`, `allowedPrincipals`를 실제 값으로 |
+| tracesData, logsData | Observability | 없음. OTLP 파일을 수집기에 그대로 넣음 |
+| 비용 장부 행 | Agent Gateway 모델 경로의 비용 귀속 | 없음. 같은 이름 |
+| conditionManifest | Agent Manifest + Tuning | identity, governance, deployment를 채워 변환 |
+| postprocess의 검사 모드 | Guardrails 집행 지점 | 규칙을 검사 서비스 adapter로 |
+| rawPayload | 평가 목적 원문 기록 (플랫폼 TBD-12) | 승인·보존 정책 확정 후 |
 
 ## 10. 구현 위치와 바꾸는 절차
 
 | 무엇 | 어디 |
 | --- | --- |
-| 이 저장소가 정의하는 6종 | `src/ocr_harness/schemas/{item,condition-manifest,span,raw-payload,model-call,field-score}.schema.json` |
-| 플랫폼 계약 사본 (고치지 않음) | `src/ocr_harness/schemas/platform/0.2.0/{evaluation,retrieval}.schema.json`. 테스트가 파일 해시를 원본과 대조 |
-| 동결 스냅샷 | `src/ocr_harness/schemas/released/1.0.0.json` |
-| 검증 함수 | `ocr_harness.schema.validate(kind, record)` |
-| id·해시 | `ocr_harness.ids.item_id`, `ocr_harness.ids.manifest_digest` |
+| 스키마의 원본 (표로 정의) | `tools/build_schemas.py` |
+| 만들어진 스키마 JSON | `src/ocr_harness/schemas/*.schema.json` |
+| 가져온 사본 (고치지 않음) | `schemas/platform/0.2.0/`, `schemas/otel-genai/76e0c19e7fe1/` |
+| 동결 스냅샷 | `schemas/released/2.0.0.json` (이전 `1.0.0.json`은 기록으로 보관) |
+| 검증 | `ocr_harness.schema.validate(kind, record)` |
+| OTLP 쓰기·읽기 | `ocr_harness.otlp` |
+| 비용 장부 집계 | `ocr_harness.ledger.model_calls` |
+| id와 해시 | `ocr_harness.ids` |
 
-스키마를 바꾸려면 (1) 실패하는 테스트를 먼저 쓰고, (2) 스키마 파일과 `SCHEMA_VERSION`을 올리고, (3) `released/<새 버전>.json`을 추가하고, (4) HISTORY에 이유를 적습니다. 스냅샷과 현재 스키마가 다르면 테스트가 실패합니다.
+스키마를 바꾸는 절차:
 
-span 속성 이름을 닫힌 목록으로 둔 이유: 원문이 들어가는 이름(`gen_ai.input.messages`, `gen_ai.retrieval.query.text` 등)과 규약에 없는 이름이 섞이는 것을 스키마에서 막기 위해서입니다. 속성을 늘릴 때는 위 절차로 버전을 올립니다.
+1. 실패하는 테스트를 먼저 씁니다.
+2. `tools/build_schemas.py`의 표를 고치고, `SCHEMA_VERSION`(`schema.py`, `otlp.py`, 스크립트의 상수)을 올립니다. 속성을 더하기만 하면 minor, 뜻이나 형식을 바꾸면 major입니다.
+3. `python tools/build_schemas.py --release`로 스키마 파일과 새 스냅샷을 씁니다.
+4. `docs/HISTORY.md`에 이유를 적습니다.
+
+스냅샷과 현재 스키마가 다르거나, JSON 파일을 손으로 고쳐 스크립트 결과와 다르면 테스트가 실패합니다.
+
+## 11. 알려진 한계
+
+- 속성 배열 안에서 같은 이름이 두 번 나오는 것은 스키마로 막지 못합니다 (OTLP는 이름이 겹치지 않아야 한다고 정합니다). 쓰는 쪽 도우미가 dict에서 만들므로 실제로는 생기지 않습니다.
+- `citation`의 URI 형식은 JSON Schema의 `format`이라 검증기가 강제하지 않습니다.
+- Croissant 데이터셋 설명 파일은 아직 없습니다. M1b에서 수집기와 함께 만듭니다.
