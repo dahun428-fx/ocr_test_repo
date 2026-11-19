@@ -1,0 +1,3761 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/traces-data.schema.json",
+  "title": "tracesData",
+  "description": "추적 파일의 한 줄. OTLP File Exporter 형식(JSON Lines, 한 줄이 TracesData)이고 OTLP JSON 인코딩을 따릅니다. 단계 1개가 span 1개, 모델 호출 1회가 chat span 1개입니다. 토큰과 비용은 chat span에만 적고 비용 장부는 거기서 뽑습니다. 원문은 넣지 않고 해시와 참조만 둡니다.",
+  "type": "object",
+  "properties": {
+    "resourceSpans": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "object",
+            "properties": {
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "enum": [
+                        "service.name",
+                        "service.version",
+                        "ocr.run.id",
+                        "ocr.schema.version"
+                      ]
+                    },
+                    "value": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ],
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "key": {
+                            "const": "service.name"
+                          }
+                        },
+                        "required": [
+                          "key"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "value": {
+                            "type": "object",
+                            "properties": {
+                              "stringValue": {
+                                "type": "string",
+                                "const": "ocr-harness"
+                              }
+                            },
+                            "required": [
+                              "stringValue"
+                            ],
+                            "additionalProperties": false,
+                            "description": "서비스 이름 (OTel resource 규약). 항상 ocr-harness."
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "key": {
+                            "const": "service.version"
+                          }
+                        },
+                        "required": [
+                          "key"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "value": {
+                            "type": "object",
+                            "properties": {
+                              "stringValue": {
+                                "type": "string",
+                                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                              }
+                            },
+                            "required": [
+                              "stringValue"
+                            ],
+                            "additionalProperties": false,
+                            "description": "이 저장소 패키지의 버전 (OTel resource 규약)."
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "key": {
+                            "const": "ocr.run.id"
+                          }
+                        },
+                        "required": [
+                          "key"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "value": {
+                            "type": "object",
+                            "properties": {
+                              "stringValue": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                              }
+                            },
+                            "required": [
+                              "stringValue"
+                            ],
+                            "additionalProperties": false,
+                            "description": "실행 묶음 id."
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "key": {
+                            "const": "ocr.schema.version"
+                          }
+                        },
+                        "required": [
+                          "key"
+                        ]
+                      },
+                      "then": {
+                        "properties": {
+                          "value": {
+                            "type": "object",
+                            "properties": {
+                              "stringValue": {
+                                "type": "string",
+                                "const": "2.0.0"
+                              }
+                            },
+                            "required": [
+                              "stringValue"
+                            ],
+                            "additionalProperties": false,
+                            "description": "이 파일이 따르는 스키마 묶음의 버전."
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "const": "service.name"
+                        }
+                      },
+                      "required": [
+                        "key"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "const": "service.version"
+                        }
+                      },
+                      "required": [
+                        "key"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "const": "ocr.run.id"
+                        }
+                      },
+                      "required": [
+                        "key"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "const": "ocr.schema.version"
+                        }
+                      },
+                      "required": [
+                        "key"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "attributes"
+            ],
+            "additionalProperties": false,
+            "description": "이 줄의 기록을 만든 주체 (OTLP Resource)."
+          },
+          "scopeSpans": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": false,
+                  "description": "기록을 만든 코드 (OTLP InstrumentationScope)."
+                },
+                "spans": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "traceId": {
+                        "type": "string",
+                        "pattern": "^(?!0{32})[a-f0-9]{32}$",
+                        "description": "추적 id. 16진수 32자리, 전부 0은 무효 (W3C Trace Context). 실행 1회(항목 × 조건 × 반복)가 추적 하나입니다."
+                      },
+                      "spanId": {
+                        "type": "string",
+                        "pattern": "^(?!0{16})[a-f0-9]{16}$",
+                        "description": "span id. 16진수 16자리."
+                      },
+                      "parentSpanId": {
+                        "type": "string",
+                        "pattern": "^(?!0{16})[a-f0-9]{16}$",
+                        "description": "부모 span id. 루트 span에는 없습니다."
+                      },
+                      "name": {
+                        "type": "string",
+                        "pattern": "^(invoke_agent|ocr|retrieval|context|history|chat|postprocess)( [^ ]+)?$",
+                        "description": "span 이름. `{작업} {대상}` 꼴 (OTel GenAI 규약). invoke_agent, retrieval, chat은 규약의 작업 이름이고 ocr, context, history, postprocess는 자체 정의입니다."
+                      },
+                      "kind": {
+                        "enum": [
+                          1,
+                          2,
+                          3,
+                          4,
+                          5
+                        ],
+                        "description": "span 종류. OTLP JSON에서는 정수로만 적습니다 (1 INTERNAL, 3 CLIENT)."
+                      },
+                      "startTimeUnixNano": {
+                        "type": "string",
+                        "pattern": "^[0-9]+$",
+                        "description": "시작 시각. 유닉스 나노초를 문자열로 적습니다 (OTLP JSON 규칙)."
+                      },
+                      "endTimeUnixNano": {
+                        "type": "string",
+                        "pattern": "^[0-9]+$",
+                        "description": "끝 시각. 유닉스 나노초를 문자열로 적습니다 (OTLP JSON 규칙)."
+                      },
+                      "attributes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "enum": [
+                                "error.type",
+                                "gen_ai.operation.name",
+                                "gen_ai.agent.name",
+                                "gen_ai.agent.version",
+                                "gen_ai.provider.name",
+                                "gen_ai.request.model",
+                                "gen_ai.response.model",
+                                "gen_ai.response.finish_reasons",
+                                "gen_ai.usage.input_tokens",
+                                "gen_ai.usage.output_tokens",
+                                "gen_ai.usage.cache_read.input_tokens",
+                                "gen_ai.usage.cache_write.input_tokens",
+                                "gen_ai.usage.reasoning.output_tokens",
+                                "gen_ai.input.messages_ref",
+                                "gen_ai.output.messages_ref",
+                                "gen_ai.system_instructions_ref",
+                                "gen_ai.data_source.id",
+                                "gen_ai.retrieval.top_k",
+                                "gen_ai.retrieval.documents",
+                                "platform.idempotency_key",
+                                "platform.guardrail.mode",
+                                "platform.model.provider",
+                                "platform.route_decision.id",
+                                "ocr.item.id",
+                                "ocr.condition.id",
+                                "ocr.manifest.digest",
+                                "ocr.dataset.version",
+                                "ocr.repeat",
+                                "ocr.outcome",
+                                "ocr.engine.name",
+                                "ocr.engine.version",
+                                "ocr.output.digest",
+                                "ocr.output.ref",
+                                "ocr.cache.hit",
+                                "ocr.retrieval.query.digest",
+                                "ocr.retrieval.query.ref",
+                                "ocr.context.template.digest",
+                                "ocr.context.order",
+                                "ocr.context.tokens.instruction",
+                                "ocr.context.tokens.ocr",
+                                "ocr.context.tokens.documents",
+                                "ocr.context.tokens.history",
+                                "ocr.context.tokens.image",
+                                "ocr.history.candidates",
+                                "ocr.history.excluded",
+                                "ocr.prompt.digest",
+                                "ocr.model.role",
+                                "ocr.model.auth_route",
+                                "ocr.model.attempt",
+                                "ocr.usage.hidden_context_tokens",
+                                "ocr.cost.sdk_reported_usd",
+                                "ocr.cost.computed_usd",
+                                "ocr.cost.price_table.version",
+                                "ocr.cost.basis",
+                                "ocr.sdk.num_turns",
+                                "ocr.sdk.duration_api_ms",
+                                "ocr.postprocess.kind",
+                                "ocr.postprocess.rules",
+                                "ocr.output.before.digest",
+                                "ocr.output.after.digest"
+                              ]
+                            },
+                            "value": {
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ],
+                          "additionalProperties": false,
+                          "allOf": [
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "error.type"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "UNAUTHENTICATED",
+                                          "FORBIDDEN",
+                                          "VALIDATION_ERROR",
+                                          "NOT_FOUND",
+                                          "CONFLICT",
+                                          "NOT_IMPLEMENTED",
+                                          "UPSTREAM_UNAVAILABLE",
+                                          "UPSTREAM_TIMEOUT",
+                                          "UPSTREAM_ERROR",
+                                          "RATE_LIMITED"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "오류 분류 (OTel error.type). 값은 플랫폼 계약의 problem.code 10종."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.operation.name"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "invoke_agent",
+                                          "retrieval",
+                                          "chat"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "작업 종류 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.agent.name"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "에이전트 이름 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.agent.version"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "조건 선언의 버전 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.provider.name"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "모델 제공자 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.request.model"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "요청한 모델 id (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.response.model"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "실제로 응답한 모델 id (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.response.finish_reasons"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "arrayValue": {
+                                        "type": "object",
+                                        "properties": {
+                                          "values": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "stringValue": {
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "stringValue"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "values"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "arrayValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "종료 사유 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.usage.input_tokens"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "입력 토큰 수 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.usage.output_tokens"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "출력 토큰 수 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.usage.cache_read.input_tokens"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "캐시에서 읽은 입력 토큰 수 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.usage.cache_write.input_tokens"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "캐시에 쓴 입력 토큰 수 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.usage.reasoning.output_tokens"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "추론에 쓴 출력 토큰 수 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.input.messages_ref"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^raw://sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "입력 메시지 원문의 참조 (OTel). 원문은 rawPayload에 둡니다."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.output.messages_ref"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^raw://sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "출력 메시지 원문의 참조 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.system_instructions_ref"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^raw://sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "시스템 지시문 원문의 참조 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.data_source.id"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "검색 대상 자료원 id (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.retrieval.top_k"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "요청한 검색 결과 수 (OTel)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "gen_ai.retrieval.documents"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "arrayValue": {
+                                        "type": "object",
+                                        "properties": {
+                                          "values": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "kvlistValue": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "values": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "key": {
+                                                            "enum": [
+                                                              "id",
+                                                              "score",
+                                                              "rank",
+                                                              "selected"
+                                                            ]
+                                                          },
+                                                          "value": {
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "key",
+                                                          "value"
+                                                        ],
+                                                        "additionalProperties": false,
+                                                        "allOf": [
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "id"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "stringValue": {
+                                                                      "type": "string",
+                                                                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "stringValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "문서 id (knowledgeDocument.documentId)."
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "score"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "doubleValue": {
+                                                                      "type": "number"
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "doubleValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "검색 점수."
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "rank"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "intValue": {
+                                                                      "oneOf": [
+                                                                        {
+                                                                          "type": "string",
+                                                                          "pattern": "^[0-9]+$"
+                                                                        },
+                                                                        {
+                                                                          "type": "integer",
+                                                                          "minimum": 0
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "intValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "순위 (1부터)."
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "selected"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "boolValue": {
+                                                                      "type": "boolean"
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "boolValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "컨텍스트에 실제로 넣었는지."
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        ]
+                                                      },
+                                                      "allOf": [
+                                                        {
+                                                          "contains": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "key": {
+                                                                "const": "id"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "key"
+                                                            ]
+                                                          }
+                                                        },
+                                                        {
+                                                          "contains": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "key": {
+                                                                "const": "score"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "key"
+                                                            ]
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "values"
+                                                  ],
+                                                  "additionalProperties": false
+                                                }
+                                              },
+                                              "required": [
+                                                "kvlistValue"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "values"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "arrayValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "검색된 문서 목록 (OTel). id와 score는 규약, rank와 selected는 자체 추가."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "platform.idempotency_key"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "같은 실행을 두 번 기록하지 않기 위한 키 (플랫폼 개념)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "platform.guardrail.mode"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "check_only",
+                                          "enforce"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "후처리를 검사만 할지 적용까지 할지 (플랫폼 guardrails의 구분)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "platform.model.provider"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "external",
+                                          "self-hosted"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "모델 위치 (플랫폼 model-result.provider)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "platform.route_decision.id"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "모델 경로 결정 id (플랫폼 model-result.routeDecisionId). 모든 호출이 모델 경로 한 곳을 지났다는 기록."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.item.id"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "항목 id."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.condition.id"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "조건 id."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.manifest.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "조건 선언의 해시."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.dataset.version"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "평가셋 버전."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.repeat"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "반복 번호 (0부터)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.outcome"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "ok",
+                                          "refused",
+                                          "empty",
+                                          "error"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "실행 결과. 거절과 빈 출력도 숨기지 않고 적습니다."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.engine.name"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "OCR 엔진 이름."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.engine.version"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "OCR 엔진 버전."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.output.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "OCR 출력의 해시."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.output.ref"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^raw://sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "OCR 출력 원문의 참조."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.cache.hit"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "boolValue": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "boolValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "OCR 캐시에서 읽었는지."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.retrieval.query.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "검색 질의의 해시. 질의에는 OCR 글자가 들어가므로 원문은 적지 않습니다."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.retrieval.query.ref"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^raw://sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "검색 질의 원문의 참조."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.template.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트 틀의 해시."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.order"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "arrayValue": {
+                                        "type": "object",
+                                        "properties": {
+                                          "values": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "stringValue": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                                }
+                                              },
+                                              "required": [
+                                                "stringValue"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "values"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "arrayValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트에 넣은 순서 (구획 이름 또는 문서 id)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.tokens.instruction"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트 중 지시문 부분의 토큰 수."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.tokens.ocr"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트 중 OCR 글자 부분의 토큰 수."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.tokens.documents"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트 중 검색 문서 부분의 토큰 수."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.tokens.history"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트 중 이력 부분의 토큰 수."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.context.tokens.image"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "컨텍스트 중 이미지 부분의 토큰 수."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.history.candidates"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "arrayValue": {
+                                        "type": "object",
+                                        "properties": {
+                                          "values": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "stringValue": {
+                                                  "type": "string",
+                                                  "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                                }
+                                              },
+                                              "required": [
+                                                "stringValue"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "values"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "arrayValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "이력 후보 턴 id."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.history.excluded"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "arrayValue": {
+                                        "type": "object",
+                                        "properties": {
+                                          "values": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "kvlistValue": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "values": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "key": {
+                                                            "enum": [
+                                                              "id",
+                                                              "reason"
+                                                            ]
+                                                          },
+                                                          "value": {
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "key",
+                                                          "value"
+                                                        ],
+                                                        "additionalProperties": false,
+                                                        "allOf": [
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "id"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "stringValue": {
+                                                                      "type": "string",
+                                                                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "stringValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "턴 id."
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "reason"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "stringValue": {
+                                                                      "type": "string",
+                                                                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "stringValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "제외 사유."
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        ]
+                                                      },
+                                                      "allOf": [
+                                                        {
+                                                          "contains": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "key": {
+                                                                "const": "id"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "key"
+                                                            ]
+                                                          }
+                                                        },
+                                                        {
+                                                          "contains": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "key": {
+                                                                "const": "reason"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "key"
+                                                            ]
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "values"
+                                                  ],
+                                                  "additionalProperties": false
+                                                }
+                                              },
+                                              "required": [
+                                                "kvlistValue"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "values"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "arrayValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "제외한 턴과 사유."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.prompt.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "모델에 보낸 최종 프롬프트의 해시."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.model.role"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "main",
+                                          "auxiliary"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "주 모델인지, SDK가 따로 부른 보조 모델인지."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.model.auth_route"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "subscription_oauth",
+                                          "api_key",
+                                          "fake"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "인증 경로."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.model.attempt"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "재시도 번호 (0부터). 재시도마다 span을 따로 남깁니다."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.usage.hidden_context_tokens"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^-?[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.cost.sdk_reported_usd"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "doubleValue": {
+                                        "type": "number",
+                                        "minimum": 0
+                                      }
+                                    },
+                                    "required": [
+                                      "doubleValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "SDK가 보고한 비용(USD). 구독에서는 청구액이 아닌 환산값. 모르면 속성을 뺍니다."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.cost.computed_usd"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "doubleValue": {
+                                        "type": "number",
+                                        "minimum": 0
+                                      }
+                                    },
+                                    "required": [
+                                      "doubleValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "가격표로 직접 계산한 비용(USD). 모르면 속성을 뺍니다."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.cost.price_table.version"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "계산에 쓴 가격표의 버전."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.cost.basis"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "비용 산정 기준 (SDK가 보고한 값)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.sdk.num_turns"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "SDK가 보고한 턴 수."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.sdk.duration_api_ms"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "intValue": {
+                                        "oneOf": [
+                                          {
+                                            "type": "string",
+                                            "pattern": "^[0-9]+$"
+                                          },
+                                          {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "intValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "SDK가 보고한 API 소요 시간(ms)."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.postprocess.kind"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "enum": [
+                                          "deterministic",
+                                          "requery"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "후처리 종류."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.postprocess.rules"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "arrayValue": {
+                                        "type": "object",
+                                        "properties": {
+                                          "values": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "kvlistValue": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "values": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "key": {
+                                                            "enum": [
+                                                              "id",
+                                                              "result"
+                                                            ]
+                                                          },
+                                                          "value": {
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "key",
+                                                          "value"
+                                                        ],
+                                                        "additionalProperties": false,
+                                                        "allOf": [
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "id"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "stringValue": {
+                                                                      "type": "string",
+                                                                      "pattern": "^[a-z][a-z0-9.-]{1,63}$"
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "stringValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "규칙 id."
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          {
+                                                            "if": {
+                                                              "properties": {
+                                                                "key": {
+                                                                  "const": "result"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "key"
+                                                              ]
+                                                            },
+                                                            "then": {
+                                                              "properties": {
+                                                                "value": {
+                                                                  "type": "object",
+                                                                  "properties": {
+                                                                    "stringValue": {
+                                                                      "type": "string",
+                                                                      "enum": [
+                                                                        "unchanged",
+                                                                        "changed",
+                                                                        "flagged"
+                                                                      ]
+                                                                    }
+                                                                  },
+                                                                  "required": [
+                                                                    "stringValue"
+                                                                  ],
+                                                                  "additionalProperties": false,
+                                                                  "description": "결과."
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        ]
+                                                      },
+                                                      "allOf": [
+                                                        {
+                                                          "contains": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "key": {
+                                                                "const": "id"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "key"
+                                                            ]
+                                                          }
+                                                        },
+                                                        {
+                                                          "contains": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "key": {
+                                                                "const": "result"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "key"
+                                                            ]
+                                                          }
+                                                        }
+                                                      ]
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "values"
+                                                  ],
+                                                  "additionalProperties": false
+                                                }
+                                              },
+                                              "required": [
+                                                "kvlistValue"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          }
+                                        },
+                                        "required": [
+                                          "values"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    },
+                                    "required": [
+                                      "arrayValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "적용한 규칙과 결과."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.output.before.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "후처리 전 출력의 해시."
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "if": {
+                                "properties": {
+                                  "key": {
+                                    "const": "ocr.output.after.digest"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              },
+                              "then": {
+                                "properties": {
+                                  "value": {
+                                    "type": "object",
+                                    "properties": {
+                                      "stringValue": {
+                                        "type": "string",
+                                        "pattern": "^sha256:[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "stringValue"
+                                    ],
+                                    "additionalProperties": false,
+                                    "description": "후처리 후 출력의 해시."
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "description": "속성. 이름은 목록에 있는 것만 받습니다. 원문이 들어가는 이름(gen_ai.input.messages 등)과 규약에 없는 이름은 목록에 없어 거부됩니다."
+                      },
+                      "status": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "enum": [
+                              0,
+                              1,
+                              2
+                            ]
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code"
+                        ],
+                        "additionalProperties": false,
+                        "description": "상태 (0 UNSET, 1 OK, 2 ERROR). ERROR이면 error.type 속성이 있어야 합니다."
+                      },
+                      "traceState": {
+                        "type": "string"
+                      },
+                      "flags": {
+                        "type": "integer"
+                      },
+                      "droppedAttributesCount": {
+                        "type": "integer"
+                      },
+                      "events": {
+                        "type": "array"
+                      },
+                      "droppedEventsCount": {
+                        "type": "integer"
+                      },
+                      "links": {
+                        "type": "array"
+                      },
+                      "droppedLinksCount": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "traceId",
+                      "spanId",
+                      "name",
+                      "kind",
+                      "startTimeUnixNano",
+                      "endTimeUnixNano",
+                      "attributes",
+                      "status"
+                    ],
+                    "additionalProperties": false,
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^invoke_agent( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.operation.name"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.agent.name"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.agent.version"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.item.id"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.condition.id"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.manifest.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.dataset.version"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.repeat"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "platform.idempotency_key"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.outcome"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^ocr( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.engine.name"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.engine.version"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.output.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.cache.hit"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^retrieval( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.operation.name"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.data_source.id"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.retrieval.top_k"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.retrieval.documents"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.retrieval.query.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^context( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.template.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.order"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.tokens.instruction"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.tokens.ocr"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.tokens.documents"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.tokens.history"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.context.tokens.image"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^history( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.history.candidates"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.history.excluded"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^chat( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.operation.name"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.provider.name"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.request.model"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.usage.input_tokens"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.usage.output_tokens"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.usage.cache_read.input_tokens"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "gen_ai.usage.cache_write.input_tokens"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.prompt.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.model.role"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.model.auth_route"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.model.attempt"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "platform.model.provider"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "platform.route_decision.id"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.usage.hidden_context_tokens"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.cost.price_table.version"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "name": {
+                              "pattern": "^postprocess( |$)"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "allOf": [
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "platform.guardrail.mode"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.postprocess.kind"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.postprocess.rules"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.output.before.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "contains": {
+                                    "type": "object",
+                                    "properties": {
+                                      "key": {
+                                        "const": "ocr.output.after.digest"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "status": {
+                              "properties": {
+                                "code": {
+                                  "const": 2
+                                }
+                              },
+                              "required": [
+                                "code"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "attributes": {
+                              "contains": {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "const": "error.type"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "schemaUrl": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "spans"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "schemaUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource",
+          "scopeSpans"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "resourceSpans"
+  ],
+  "additionalProperties": false
+}

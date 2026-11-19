@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocr-harness"
+version = "0.0.1"
+description = "OCR → 하네스 → Claude 평가 주도 개발(EDD) 체계"
+requires-python = ">=3.11"
+dependencies = [
+    "jsonschema>=4.20",
+    "referencing>=0.30",
+    "rfc8785>=0.1.4",
+    # OTLP JSON 인코더가 아직 베타라 버전을 고정합니다. 올릴 때는 테스트(SDK 출력이 스키마를 통과하는지)로 확인합니다.
+    "opentelemetry-sdk==1.45.2",
+    "opentelemetry-exporter-otlp-json-common==0.66b2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ocr_harness = ["schemas/*.json", "schemas/**/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
