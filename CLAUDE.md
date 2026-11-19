@@ -14,6 +14,7 @@
 | [docs/implementation-plan.md](docs/implementation-plan.md) | 구현 플랜 v3 (M0~M8), 증분 데이터 규칙, 관문 |
 | [docs/TODO.md](docs/TODO.md) | 지금 할 일과 사용자 확인 대기 항목 |
 | [docs/HISTORY.md](docs/HISTORY.md) | 결정과 변경 기록 |
+| [docs/schema-design.md](docs/schema-design.md) | 스키마 설계안 v2 (플랫폼 계약·OTel 대응, 제안 상태) |
 | [docs/m1a-results.md](docs/m1a-results.md) | M1a 탐색 결과 (집계 숫자) |
 
 ## 반드시 지킬 규칙
