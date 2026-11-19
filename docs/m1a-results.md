@@ -18,7 +18,7 @@
 
 ## (가) 필드 복원 — 2026-11-19
 
-실행: `spikes/m1a_field_restore.py`, `src/ocr_harness/fields.py`. 계획은 20장이었지만 자동 검사라 485장 전체에 돌렸습니다.
+실행: `spikes/m1a_field_restore.py`, `src/ocr_harness/pharma/fields.py`. 계획은 20장이었지만 자동 검사라 485장 전체에 돌렸습니다.
 
 ### 유형 코드
 
@@ -72,7 +72,7 @@
 
 ## (나) 제품 ↔ 식약처 매칭 — 2026-11-19
 
-실행: `spikes/m1a_kb_match.py`, `src/ocr_harness/kb_match.py`. 사용자 PC에서 실행했습니다.
+실행: `spikes/m1a_kb_match.py`, `src/ocr_harness/pharma/kb_match.py`. 사용자 PC에서 실행했습니다.
 
 | 구분 | 제품 수 (152종 중) |
 | --- | --- |

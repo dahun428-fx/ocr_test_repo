@@ -10,7 +10,7 @@
   - 이 연구의 규칙: resource 속성, 오류 표시, 평가 이벤트 이름
   - 읽기: OTLP JSON → 파이썬 값 (비용 장부와 대시보드에서 씁니다)
 
-쓴 기록이 규칙에 맞는지는 ocr_harness.schema.validate("tracesData" | "logsData", 줄)로 검사합니다.
+쓴 기록이 규칙에 맞는지는 ocr_harness.common.schema.validate("tracesData" | "logsData", 줄)로 검사합니다.
 """
 import json
 import time
@@ -25,7 +25,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Status, StatusCode
 
-from ocr_harness.schema import SCHEMA_VERSION   # 버전 상수는 schema.py 한 곳에만 둡니다.
+from ocr_harness.common.schema import SCHEMA_VERSION   # 버전 상수는 schema.py 한 곳에만 둡니다.
 
 SERVICE_NAME = "ocr-harness"
 SCOPE_NAME = "ocr_harness"                      # get_tracer / get_logger에 넘기는 이름

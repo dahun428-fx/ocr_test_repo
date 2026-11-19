@@ -15,7 +15,7 @@ import sys
 import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
-from ocr_harness.fields import Token, extract_fields, is_misread  # noqa: E402
+from ocr_harness.pharma.fields import Token, extract_fields, is_misread  # noqa: E402
 
 
 def load_ocr():

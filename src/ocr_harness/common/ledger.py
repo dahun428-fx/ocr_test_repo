@@ -5,7 +5,7 @@
 """
 from collections.abc import Iterable
 
-from ocr_harness import otlp
+from ocr_harness.common import otlp
 
 
 def model_calls(lines: Iterable[dict]) -> list[dict]:

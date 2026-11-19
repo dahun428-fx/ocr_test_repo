@@ -43,8 +43,8 @@
 - 결정이 바뀌면 `docs/HISTORY.md`에 날짜와 이유를 적고, `docs/TODO.md`를 갱신합니다.
 - 테스트를 먼저 쓰고 구현합니다. 채점기와 스키마는 정답이 알려진 합성 항목으로 단위 테스트합니다.
 - 연구 기록의 원본은 JSONL 파일입니다. 뷰어나 검사 도구 같은 서버는 그 파일을 읽는 보조 도구로만 쓰고, 서버에만 있는 기록을 만들지 않습니다.
-- **표준이 있으면 그 형식을 그대로 씁니다.** 추적과 평가 이벤트는 OTLP JSON(OTLP File Exporter 형식)이고, OpenTelemetry SDK로 만들어 `ocr_harness.otlp`의 내보내기로 파일에 씁니다. OTLP JSON을 손으로 조립하지 않습니다. 속성 이름은 OpenTelemetry GenAI 규약(`gen_ai.*`), 플랫폼 개념(`platform.*`), 이 연구의 자체 정의(`ocr.*`)로 접두사를 나눕니다. 새 이름을 정할 때는 규약 원문에 같은 뜻의 이름이 있는지 먼저 확인합니다.
-- 토큰과 비용은 chat span에만 적습니다. 비용 장부는 거기서 뽑는 집계입니다 (`ocr_harness.ledger`).
+- **표준이 있으면 그 형식을 그대로 씁니다.** 추적과 평가 이벤트는 OTLP JSON(OTLP File Exporter 형식)이고, OpenTelemetry SDK로 만들어 `ocr_harness.common.otlp`의 내보내기로 파일에 씁니다. OTLP JSON을 손으로 조립하지 않습니다. 속성 이름은 OpenTelemetry GenAI 규약(`gen_ai.*`), 플랫폼 개념(`platform.*`), 이 연구의 자체 정의(`ocr.*`)로 접두사를 나눕니다. 새 이름을 정할 때는 규약 원문에 같은 뜻의 이름이 있는지 먼저 확인합니다.
+- 토큰과 비용은 chat span에만 적습니다. 비용 장부는 거기서 뽑는 집계입니다 (`ocr_harness.common.ledger`).
 - 추적 기록에는 원문을 넣지 않습니다. 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다.
 - 스키마의 원본은 `tools/build_schemas.py`입니다. 바꿀 때는 버전을 올리고 `schemas/released/<버전>.json` 스냅샷을 추가합니다 (docs/schema-design.md 10절).
 - 직접 짜기 전에 표준 구현이나 오픈소스가 있는지 먼저 봅니다. 도입할 때는 라이선스를 원문으로 확인하고, 그 도구의 출력을 검증하는 테스트를 하나 둡니다 (docs/open-source-adoption.md).

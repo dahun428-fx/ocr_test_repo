@@ -43,31 +43,39 @@ pytest -q
 | `TODO.md` | 남은 일과 사용자 확인 대기 항목 |
 | `HISTORY.md` | 결정과 변경의 날짜순 기록 |
 
-### 코드 (`src/ocr_harness/`)
+### 공용 코드 (`src/ocr_harness/common/`)
+
+다른 프로젝트에서도 쓸 수 있는 부분입니다. 방법은 공용이지만 "아직 박혀 있는 것" 열의 이름은 이 연구의 것이라, 두 번째 프로젝트가 생길 때 인자로 빼야 합니다.
+
+| 파일 | 역할 | 아직 박혀 있는 것 |
+| --- | --- | --- |
+| `schema.py` | 기록 한 건이 스키마에 맞는지 검증. 스키마 버전 상수의 원본 | 기록 종류 7개의 이름 |
+| `otlp.py` | OpenTelemetry SDK로 만든 추적·평가 이벤트를 JSONL 파일로 내보내고 다시 읽음 | 서비스 이름 `ocr-harness`, resource 속성 `ocr.run.id`, `ocr.schema.version` |
+| `ledger.py` | 추적 파일의 chat span에서 비용 장부 행을 뽑음 | `ocr.cost.*`, `ocr.model.*` 속성 이름 |
+| `ids.py` | 항목 id와 RFC 8785 해시 계산 | 항목 id의 `img-` 접두사 |
+| `repo_guard.py` | 데이터 파일, 이메일, 개인정보 키가 저장소에 들어갔는지 검사 | 촬영자 정보 키 `writer_num`, 허용 경로 |
+
+### 이 프로젝트 전용 코드 (`src/ocr_harness/pharma/`)
+
+의약품 패키징 OCR 데이터에만 해당합니다. 다른 도메인이 오면 이 폴더 옆에 새 폴더를 둡니다.
 
 | 파일 | 역할 |
 | --- | --- |
-| `schema.py` | 기록 한 건이 스키마에 맞는지 검증. 스키마 버전 상수의 원본 |
-| `otlp.py` | OpenTelemetry SDK로 만든 추적·평가 이벤트를 JSONL 파일로 내보내고 다시 읽음 |
-| `ledger.py` | 추적 파일의 chat span에서 비용 장부 행을 뽑음 |
-| `ids.py` | 항목 id와 RFC 8785 해시 계산 |
 | `fields.py` | 라벨이나 OCR 결과에서 제품명·유효성분명·사용기한을 뽑고, OCR 오인식 여부를 판정 |
 | `kb_match.py` | 제품명을 식약처 공개 목록과 맞춤 (정확·모호·미매칭) |
-| `repo_guard.py` | 데이터 파일, 이메일, 촬영자 정보가 저장소에 들어갔는지 검사 |
-| `__init__.py` | 패키지 표시용 빈 파일 |
 
 ### 스키마 (`src/ocr_harness/schemas/`)
 
-| 파일 | 역할 |
-| --- | --- |
-| `item.schema.json` | 평가 항목 1건의 형식 |
-| `condition-manifest.schema.json` | 실험 조건 선언의 형식 |
-| `traces-data.schema.json` | 추적 파일 한 줄의 형식 (OTLP + 속성 규칙) |
-| `logs-data.schema.json` | 평가 이벤트 파일 한 줄의 형식 (OTLP + 속성 규칙) |
-| `raw-payload.schema.json` | 저장소 밖에 두는 원문 기록의 형식 |
-| `platform/0.2.0/*.json` | 플랫폼 계약 사본 2개 (평가 결과, 지식 문서). 고치지 않음 |
-| `otel-genai/76e0c19e7fe1/*` | OTel 메시지 스키마 사본 2개와 출처·라이선스 안내. 고치지 않음 |
-| `released/2.0.0.json` | 스키마 2.0.0 전체를 묶은 동결 스냅샷 |
+| 파일 | 역할 | 공용 / 전용 |
+| --- | --- | --- |
+| `item.schema.json` | 평가 항목 1건의 형식 | 전용에 가까움 (필드, 질의 유형 A/B/C) |
+| `condition-manifest.schema.json` | 실험 조건 선언의 형식 | 공용에 가까움 (구성요소 5개의 이름만 이 연구의 것) |
+| `traces-data.schema.json` | 추적 파일 한 줄의 형식 (OTLP + 속성 규칙) | OTLP 구조는 공용, `ocr.*` 속성 규칙은 전용 |
+| `logs-data.schema.json` | 평가 이벤트 파일 한 줄의 형식 (OTLP + 속성 규칙) | 위와 같음 |
+| `raw-payload.schema.json` | 저장소 밖에 두는 원문 기록의 형식 | 공용 |
+| `platform/0.2.0/*.json` | 플랫폼 계약 사본 2개 (평가 결과 `evaluation`, 지식 문서 `knowledgeDocument`는 `retrieval.schema.json`의 문서 형식). 고치지 않음 | 공용 |
+| `otel-genai/76e0c19e7fe1/*` | OTel 메시지 스키마 사본 2개와 출처·라이선스 안내. 고치지 않음 | 공용 |
+| `released/2.0.0.json` | 스키마 2.0.0 전체를 묶은 동결 스냅샷 | - |
 
 위 다섯 개 `*.schema.json`과 스냅샷은 손으로 고치지 않고 `tools/build_schemas.py`가 만듭니다.
 
@@ -75,7 +83,7 @@ pytest -q
 
 | 파일 | 역할 |
 | --- | --- |
-| `tools/build_schemas.py` | 스키마의 원본. 속성 표에서 스키마 JSON과 스냅샷을 생성 |
+| `tools/build_schemas.py` | 스키마의 원본. 속성 표에서 스키마 JSON과 스냅샷을 생성. 만드는 방법은 공용, 안의 속성 표는 전용 |
 | `spikes/m1a_field_restore.py` | M1a (가): 라벨에서 필드가 복원되는지 집계 (PC에서 실행) |
 | `spikes/m1a_kb_match.py` | M1a (나): 제품 152종을 식약처 목록과 매칭 (PC에서 실행) |
 | `spikes/m1a_ocr_misread.py` | M1a (다): 로컬 OCR을 돌려 오인식 필드 수 집계 (PC에서 실행) |

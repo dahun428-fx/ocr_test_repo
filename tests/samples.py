@@ -10,7 +10,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from ocr_harness import otlp
+from ocr_harness.common import otlp
 
 D = "sha256:" + "a" * 64          # 형식만 맞춘 가짜 해시
 TRACE = "0123456789abcdef0123456789abcdef"   # traceId: 16진수 32자리

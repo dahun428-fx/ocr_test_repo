@@ -1,5 +1,5 @@
 """데이터 제품명 ↔ 공개 의약품 목록 매칭 규칙 (M1a (나))."""
-from ocr_harness.kb_match import build_index, match
+from ocr_harness.pharma.kb_match import build_index, match
 
 MFDS = ["합성정10밀리그램(가상성분염)", "합성정20밀리그램(가상성분염)", "다른캡슐", "모호액0.5%", "모호액0.5%(1회용)"]
 INDEX = build_index(MFDS)

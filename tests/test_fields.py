@@ -1,5 +1,5 @@
 """라벨에서 필드를 뽑고 OCR 결과와 비교하는 규칙 (M1a 집계의 근거)."""
-from ocr_harness.fields import Token, extract_fields, is_misread, norm
+from ocr_harness.pharma.fields import Token, extract_fields, is_misread, norm
 
 
 def poly(text, type_code, x, y, w=100, h=40):

@@ -13,7 +13,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
-from ocr_harness.kb_match import build_index, match  # noqa: E402
+from ocr_harness.pharma.kb_match import build_index, match  # noqa: E402
 
 
 def read_names(path: pathlib.Path, column: str) -> list[str]:

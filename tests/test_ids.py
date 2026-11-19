@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from ocr_harness.ids import canonical_json, content_digest, item_id, manifest_digest
+from ocr_harness.common.ids import canonical_json, content_digest, item_id, manifest_digest
 
 import samples
 

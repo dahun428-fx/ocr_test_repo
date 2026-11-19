@@ -2,7 +2,7 @@
 import collections
 import re
 
-from ocr_harness.fields import norm
+from ocr_harness.pharma.fields import norm
 
 # 괄호와 그 안의 글자: "합성정10밀리그램(가상성분염)"의 "(가상성분염)".
 BRACKETS = re.compile(r"\([^()]*\)")

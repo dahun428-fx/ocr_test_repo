@@ -1,4 +1,4 @@
-"""OpenTelemetry SDK로 기록을 쓰고 읽는 부분 (ocr_harness.otlp).
+"""OpenTelemetry SDK로 기록을 쓰고 읽는 부분 (ocr_harness.common.otlp).
 
 기록을 만드는 일은 SDK와 공식 JSON 인코더가 합니다. 여기서는 (1) 그 결과가 OTLP 파일 형식이고
 우리 스키마를 통과하는지, (2) 우리가 덧붙인 얇은 코드(파일 쓰기, 오류 표시, 읽기)가 맞는지만 봅니다.
@@ -10,7 +10,7 @@ from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
-from ocr_harness import otlp, schema
+from ocr_harness.common import otlp, schema
 
 import samples
 

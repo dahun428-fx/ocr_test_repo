@@ -1,5 +1,5 @@
-"""비용 장부는 원본이 아니라 chat span에서 뽑는 집계입니다 (ocr_harness.ledger)."""
-from ocr_harness import ledger, otlp
+"""비용 장부는 원본이 아니라 chat span에서 뽑는 집계입니다 (ocr_harness.common.ledger)."""
+from ocr_harness.common import ledger, otlp
 
 import samples
 
