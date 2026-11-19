@@ -47,6 +47,18 @@ def _tokens(label: dict, type_code: int) -> list[Token]:
     return found
 
 
+def reading_order(tokens: list[Token]) -> list[Token]:
+    """라벨 순서는 읽는 순서가 아니므로, 세로 중심이 가까운 단어를 한 줄로 묶어 왼쪽부터 읽습니다."""
+    lines: list[dict] = []
+    for token in sorted(tokens, key=lambda t: (t.box[1] + t.box[3]) / 2):
+        center, height = (token.box[1] + token.box[3]) / 2, token.box[3] - token.box[1]
+        if lines and abs(center - lines[-1]["center"]) < 0.6 * max(height, lines[-1]["height"]):
+            lines[-1]["tokens"].append(token)
+        else:
+            lines.append({"center": center, "height": height, "tokens": [token]})
+    return [t for line in lines for t in sorted(line["tokens"], key=lambda t: t.box[0])]
+
+
 def extract_fields(label: dict) -> list[Field]:
     fields = []
     name = [t for t in _tokens(label, 1) if not NOISE.match(t.text) and norm(t.text)]
@@ -55,7 +67,7 @@ def extract_fields(label: dict) -> list[Field]:
     dates = [t for t in _tokens(label, 3) if DATE.search(t.text)]
     if len(dates) == 1:
         fields.append(Field("expiry", "A", tuple(dates)))
-    ingredient = _tokens(label, 2)
+    ingredient = reading_order(_tokens(label, 2))
     for index, token in enumerate(ingredient):
         if not ACTIVE_HEAD.search(token.text):
             continue

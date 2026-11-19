@@ -66,3 +66,12 @@ def test_field_is_misread_when_ocr_found_nothing_at_that_place():
 def test_word_split_across_two_ocr_boxes_is_read_left_to_right():
     field = extract_fields(label(poly("가상성분", 1, 0, 0, w=200)))[0]
     assert is_misread(field, [line("성분", 100, 0), line("가상", 0, 0)]) is False
+
+
+def test_ingredient_words_are_read_line_by_line_even_if_labelled_out_of_order():
+    fields = extract_fields(label(
+        poly("첨가제", 2, 0, 50), poly("50mg", 2, 220, 2), poly("가상성분염", 2, 110, 0),
+        poly("유당", 2, 110, 52), poly("유효성분", 2, 0, 3),
+    ))
+    active = [f for f in fields if f.name == "active_ingredient"][0]
+    assert [t.text for t in active.tokens] == ["가상성분염"]
