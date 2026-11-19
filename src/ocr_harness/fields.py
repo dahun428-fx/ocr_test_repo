@@ -32,7 +32,10 @@ class Token:
 
 @dataclass(frozen=True)
 class Field:
-    """라벨에서 뽑은 필드 하나 (예: 제품명). 정답 값은 tokens의 글자입니다."""
+    """라벨에서 뽑은 필드 하나 (예: 제품명). 정답 값은 tokens의 글자입니다.
+
+    name은 item 기록의 fieldId로 그대로 쓰이므로 플랫폼 id 패턴(소문자, 숫자, 점, 붙임표)을 따릅니다.
+    """
 
     name: str
     query_type: str  # A: 포장에만 있는 값, B: 공개 근거로 교정 가능한 값
@@ -81,7 +84,7 @@ def extract_fields(label: dict) -> list[Field]:
     # 제품명 (유형 1): 기호와 머리말을 뺀 나머지 전부. 공개 근거로 교정할 수 있으므로 B.
     name = [t for t in _tokens(label, 1) if not NOISE.match(t.text) and norm(t.text)]
     if name:
-        fields.append(Field("product_name", "B", tuple(name)))
+        fields.append(Field("product-name", "B", tuple(name)))
     # 사용기한 (유형 3): 날짜가 정확히 하나일 때만. 제조일과 섞여 여러 개면 어느 것인지 알 수 없어 버립니다.
     # 포장에만 있는 값이므로 A.
     dates = [t for t in _tokens(label, 3) if DATE.search(t.text)]
@@ -100,7 +103,7 @@ def extract_fields(label: dict) -> list[Field]:
             if norm(following.text):
                 active.append(following)
         if active:
-            fields.append(Field("active_ingredient", "B", tuple(active)))
+            fields.append(Field("active-ingredient", "B", tuple(active)))
         break  # 첫 번째 표지 단어만 씁니다.
     return fields
 

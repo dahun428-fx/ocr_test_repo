@@ -11,7 +11,8 @@
 """
 from datetime import datetime, timezone
 
-SCHEMA_VERSION = "2.0.0"
+from ocr_harness.schema import SCHEMA_VERSION   # 버전 상수는 schema.py 한 곳에만 둡니다.
+
 SERVICE_NAME = "ocr-harness"
 SCOPE_NAME = "ocr_harness"
 EVALUATION_EVENT = "gen_ai.evaluation.result"   # OTel GenAI 규약의 평가 결과 이벤트 이름

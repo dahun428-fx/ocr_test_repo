@@ -21,7 +21,7 @@ def test_norm_ignores_spacing_brackets_and_unit_spelling():
 
 def test_product_name_field_joins_type1_words_and_drops_marks():
     fields = extract_fields(label(poly("합성", 1, 0, 0), poly("R", 1, 110, 0), poly("정", 1, 220, 0)))
-    name = [f for f in fields if f.name == "product_name"][0]
+    name = [f for f in fields if f.name == "product-name"][0]
     assert name.query_type == "B"
     assert [t.text for t in name.tokens] == ["합성", "정"]
 
@@ -39,7 +39,7 @@ def test_active_ingredient_field_is_words_between_marker_and_amount():
         poly("유효성분", 2, 0, 0), poly("가상성분염(KP)", 2, 110, 0), poly("50mg", 2, 220, 0),
         poly("첨가제", 2, 0, 50), poly("유당", 2, 110, 50),
     ))
-    active = [f for f in fields if f.name == "active_ingredient"][0]
+    active = [f for f in fields if f.name == "active-ingredient"][0]
     assert active.query_type == "B"
     assert [t.text for t in active.tokens] == ["가상성분염(KP)"]
 
@@ -73,5 +73,16 @@ def test_ingredient_words_are_read_line_by_line_even_if_labelled_out_of_order():
         poly("첨가제", 2, 0, 50), poly("50mg", 2, 220, 2), poly("가상성분염", 2, 110, 0),
         poly("유당", 2, 110, 52), poly("유효성분", 2, 0, 3),
     ))
-    active = [f for f in fields if f.name == "active_ingredient"][0]
+    active = [f for f in fields if f.name == "active-ingredient"][0]
     assert [t.text for t in active.tokens] == ["가상성분염"]
+
+
+def test_field_names_are_valid_item_field_ids():
+    # 필드 이름은 item 기록의 fieldId로 그대로 쓰이므로 플랫폼 id 패턴을 지켜야 합니다 (밑줄 불가).
+    import re
+
+    fields = extract_fields(label(
+        poly("합성정", 1, 0, 0), poly("2027.01.01", 3, 0, 50), poly("유효성분", 2, 0, 100), poly("가상성분염", 2, 120, 100),
+    ))
+    assert {f.name for f in fields} == {"product-name", "expiry", "active-ingredient"}
+    assert all(re.match(r"^[a-z][a-z0-9.-]{1,63}$", f.name) for f in fields)

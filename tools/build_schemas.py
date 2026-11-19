@@ -14,8 +14,15 @@ import pathlib
 import sys
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "src" / "ocr_harness" / "schemas"
-BASE = "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/"
-OTEL = "https://raw.githubusercontent.com/open-telemetry/semantic-conventions-genai/76e0c19e7fe1/model/gen-ai/"
+# 버전과 규약 커밋은 패키지(schema.py)에 한 번만 적고 여기서 가져다 씁니다.
+sys.path.insert(0, str(OUT.parent.parent))
+from ocr_harness.schema import SCHEMA_VERSION, SEMCONV_COMMIT, bundle  # noqa: E402
+
+# 여러 스키마에서 같이 쓰는 값 목록. 한 곳에서만 정의해 서로 어긋나지 않게 합니다.
+AUTH_ROUTES = ["subscription_oauth", "api_key", "fake"]
+QUERY_TYPES = ["A", "B", "C"]
+BASE = f"https://github.com/dahun428-fx/ocr_test_repo/schemas/{SCHEMA_VERSION}/"
+OTEL = f"https://raw.githubusercontent.com/open-telemetry/semantic-conventions-genai/{SEMCONV_COMMIT}/model/gen-ai/"
 ID_P, SEMVER_P, DIGEST_P = "^[a-z][a-z0-9.-]{1,63}$", "^[0-9]+\\.[0-9]+\\.[0-9]+$", "^sha256:[a-f0-9]{64}$"
 TRACE_P, SPAN_P = "^(?!0{32})[a-f0-9]{32}$", "^(?!0{16})[a-f0-9]{16}$"
 REF_P, NANO_P = "^raw://sha256:[a-f0-9]{64}$", "^[0-9]+$"
@@ -30,12 +37,12 @@ def obj(props, optional=(), **extra):
     return {"type": "object", "properties": props, "required": [k for k in props if k not in optional],
             "additionalProperties": False, **extra}
 def record(file, kind, text, props, optional=(), **extra):
-    head = {"schemaVersion": d({"const": "2.0.0"}, "이 기록이 따르는 스키마 묶음의 버전."),
+    head = {"schemaVersion": d({"const": SCHEMA_VERSION}, "이 기록이 따르는 스키마 묶음의 버전."),
             "recordType": d({"const": kind}, "기록 종류. JSONL 한 파일에 여러 종류가 섞여도 구분할 수 있게 합니다.")}
     return {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": BASE + file, "title": kind,
             "description": text, **obj({**head, **props}, optional, **extra)}
 
-QTYPE = {"enum": ["A", "B", "C"]}
+QTYPE = {"enum": QUERY_TYPES}
 QTEXT = "질의 유형. A: 포장에만 있는 값, B: 공개 근거로 교정할 수 있는 값, C: 둘 다 필요한 값. (이 연구의 자체 정의)"
 EVID = pid("근거가 되는 knowledgeDocument의 documentId. 채점과 분석에만 쓰고 모델 입력에는 넣지 않습니다.")
 schemas = {}
@@ -68,7 +75,7 @@ schemas["condition-manifest.schema.json"] = record("condition-manifest.schema.js
     "conditionId": pid("조건 id (c0~c4, ck 등). 닫힌 목록이 아닙니다."),
     "version": semver("조건 선언의 버전. 플랫폼 evaluation 계약의 agentVersion에 들어갑니다."),
     "model": d(obj({"requestModel": d({"type": "string", "minLength": 1}, "요청할 모델 id (OTel gen_ai.request.model과 같은 값)."),
-                    "authRoute": d({"enum": ["subscription_oauth", "api_key", "fake"]}, "인증 경로. 구독, API 키, 가짜 모델의 결과를 섞지 않기 위해 적습니다.")}), "모델 설정."),
+                    "authRoute": d({"enum": AUTH_ROUTES}, "인증 경로. 구독, API 키, 가짜 모델의 결과를 섞지 않기 위해 적습니다.")}), "모델 설정."),
     "components": d(obj({"ocr": component("OCR 엔진."), "retrieval": component("검색."), "context": component("컨텍스트 구성."),
                          "history": component("이력 선별."), "postprocess": component("출력 후처리.")}), "하네스 단계별 구현."),
     "promptTemplateDigest": digest("프롬프트 틀의 SHA-256."),
@@ -106,7 +113,7 @@ RESOURCE = {
     "service.name": S("서비스 이름 (OTel resource 규약). 항상 ocr-harness.", const="ocr-harness"),
     "service.version": S("이 저장소 패키지의 버전 (OTel resource 규약).", **sv),
     "ocr.run.id": S("실행 묶음 id.", **idp),
-    "ocr.schema.version": S("이 파일이 따르는 스키마 묶음의 버전.", const="2.0.0"),
+    "ocr.schema.version": S("이 파일이 따르는 스키마 묶음의 버전.", const=SCHEMA_VERSION),
 }
 resource = d(obj({"attributes": key_values(RESOURCE, list(RESOURCE))}), "이 줄의 기록을 만든 주체 (OTLP Resource).")
 scope = d(obj({"name": {"type": "string"}, "version": {"type": "string"}}, optional=("name", "version")), "기록을 만든 코드 (OTLP InstrumentationScope).")
@@ -153,7 +160,7 @@ SPAN_ATTRS = {
     "ocr.history.excluded": KA("제외한 턴과 사유.", {"id": S("턴 id.", **idp), "reason": S("제외 사유.", **idp)}, ["id", "reason"]),
     "ocr.prompt.digest": S("모델에 보낸 최종 프롬프트의 해시.", **dg),
     "ocr.model.role": S("주 모델인지, SDK가 따로 부른 보조 모델인지.", enum=["main", "auxiliary"]),
-    "ocr.model.auth_route": S("인증 경로.", enum=["subscription_oauth", "api_key", "fake"]),
+    "ocr.model.auth_route": S("인증 경로.", enum=AUTH_ROUTES),
     "ocr.model.attempt": I("재시도 번호 (0부터). 재시도마다 span을 따로 남깁니다."),
     "ocr.usage.hidden_context_tokens": I("SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트).", negative=True),
     "ocr.cost.sdk_reported_usd": F("SDK가 보고한 비용(USD). 구독에서는 청구액이 아닌 환산값. 모르면 속성을 뺍니다.", minimum=0),
@@ -218,7 +225,7 @@ EVENT_ATTRS = {
     "ocr.dataset.version": S("평가셋 버전 (플랫폼 datasetVersion).", **sv), "ocr.scorer.version": S("채점기 버전.", **sv),
     "ocr.target.kind": S("채점 대상의 종류: 필드, 질의, 이미지 전체.", enum=["field", "query", "item"]),
     "ocr.target.id": S("대상 필드 id 또는 질의 id. 이미지 전체 채점에는 없습니다.", **idp),
-    "ocr.query.type": S(QTEXT, enum=["A", "B", "C"]),
+    "ocr.query.type": S(QTEXT, enum=QUERY_TYPES),
     "ocr.ocr_misread": B("OCR이 이 필드를 잘못 읽었는지. 주 지표의 분모 표시입니다."),
     "ocr.score.stage": S("후처리 전 출력을 채점했는지, 후 출력을 채점했는지.", enum=["before_postprocess", "after_postprocess"]),
 }
@@ -273,6 +280,4 @@ if __name__ == "__main__":
         write(file_name, built)
     if "--release" in sys.argv:
         # 패키지의 bundle()이 방금 쓴 파일을 읽어 스냅샷을 만듭니다.
-        sys.path.insert(0, str(OUT.parent.parent))
-        from ocr_harness.schema import SCHEMA_VERSION, bundle
         write(f"released/{SCHEMA_VERSION}.json", bundle())

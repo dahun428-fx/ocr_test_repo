@@ -96,7 +96,7 @@ def main() -> None:
             return {"products": 0}
         return {"products": len(counts), "min": min(counts), "median": statistics.median(counts), "max": max(counts)}
 
-    b_fields = ("product_name", "active_ingredient")
+    b_fields = ("product-name", "active-ingredient")
     summary = {
         "ocr": "PaddleOCR PP-OCRv5 mobile det + korean mobile rec, CPU",
         "images": len(labels) - missing_images,
@@ -111,7 +111,7 @@ def main() -> None:
                 "eligible_per_product": distribution(f"{name}:eligible"),
                 "misread_per_product": distribution(f"{name}:misread"),
             }
-            for name in ("product_name", "active_ingredient", "expiry")
+            for name in ("product-name", "active-ingredient", "expiry")
         },
         "b_type_total": {
             "eligible": sum(eligible[n] for n in b_fields),
