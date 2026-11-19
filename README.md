@@ -45,15 +45,21 @@ pytest -q
 
 ### 공용 코드 (`src/ocr_harness/common/`)
 
-다른 프로젝트에서도 쓸 수 있는 부분입니다. 방법은 공용이지만 "아직 박혀 있는 것" 열의 이름은 이 연구의 것이라, 두 번째 프로젝트가 생길 때 인자로 빼야 합니다.
+다른 프로젝트에서도 그대로 쓸 수 있는 틀입니다. 이 연구의 이름(`ocr.*`, `ocr-harness`, `img-` 등)은 여기에 없고, 프로젝트가 값이나 자식 클래스로 넣습니다. `tests/test_common.py`가 가상의 다른 프로젝트 설정으로 이 틀을 돌려 그 점을 검사합니다.
 
-| 파일 | 역할 | 아직 박혀 있는 것 |
+| 파일 | 역할 | 프로젝트가 넣는 것 (방식) |
 | --- | --- | --- |
-| `schema.py` | 기록 한 건이 스키마에 맞는지 검증. 스키마 버전 상수의 원본 | 기록 종류 7개의 이름 |
-| `otlp.py` | OpenTelemetry SDK로 만든 추적·평가 이벤트를 JSONL 파일로 내보내고 다시 읽음 | 서비스 이름 `ocr-harness`, resource 속성 `ocr.run.id`, `ocr.schema.version` |
-| `ledger.py` | 추적 파일의 chat span에서 비용 장부 행을 뽑음 | `ocr.cost.*`, `ocr.model.*` 속성 이름 |
-| `ids.py` | 항목 id와 RFC 8785 해시 계산 | 항목 id의 `img-` 접두사 |
-| `repo_guard.py` | 데이터 파일, 이메일, 개인정보 키가 저장소에 들어갔는지 검사 | 촬영자 정보 키 `writer_num`, 허용 경로 |
+| `profile.py` | 프로젝트 설정 `Profile` | 서비스 이름, 속성 접두사, 스키마 버전, 항목 id 접두사 (값) |
+| `schema.py` | 스키마 묶음을 읽고 기록을 검증하는 `SchemaRegistry` | 기록 종류와 파일 위치. `FileSchema`(파일 전체) 또는 `SubSchema`(남의 계약 파일의 일부)로 지정 (전략) |
+| `otlp.py` | 추적·평가 이벤트를 JSONL로 쓰고 읽음. `Telemetry`가 resource·tracer·logger를 만들고, 두 내보내기는 `JsonLinesWriter`를 물려받음 | `Profile` (값). 새 내보내기는 `_encode`만 정하면 됨 (템플릿 메서드) |
+| `ledger.py` | chat span에서 비용 장부 행을 뽑는 `Ledger` | `Profile` (값). 프로젝트만의 열은 상속해서 `extra_columns`에 추가 |
+| `ids.py` | 플랫폼 id와 RFC 8785 해시 | id 접두사 (인자) |
+| `repo_guard.py` | 저장소에 올리면 안 되는 파일을 찾는 `RepoGuard` | 규칙 목록. `SuffixRule`, `AllowedFolderRule`, `EmailRule`, `ContentPatternRule`을 조립하거나 `Rule`을 상속 (전략) |
+| `fields.py` | 위치가 있는 글자 조각(`Token`), 필드(`Field`), 읽는 순서, 오인식 판정 | `FieldExtractor`를 상속해 `extract`를 구현하고 정규화 규칙(`Normalizer`)을 지정 |
+
+### 이 연구의 설정 (`src/ocr_harness/project.py`)
+
+공용 틀에 이 연구의 이름을 끼우는 한 곳입니다. `PROFILE`, `SCHEMAS`, `TELEMETRY`, `LEDGER`, `GUARD`를 만들고, 거기에 묶인 함수를 내놓습니다: `validate`, `bundle`, `resource`, `tracer`, `logger`, `model_calls`, `item_id`, `find_violations`, `extract_fields`, `is_misread`. 나머지 코드와 테스트는 이 함수들을 부릅니다. 다른 프로젝트는 이 파일에 해당하는 것 하나와 자기 도메인 폴더만 새로 쓰면 됩니다.
 
 ### 이 프로젝트 전용 코드 (`src/ocr_harness/pharma/`)
 
@@ -61,7 +67,7 @@ pytest -q
 
 | 파일 | 역할 |
 | --- | --- |
-| `fields.py` | 라벨이나 OCR 결과에서 제품명·유효성분명·사용기한을 뽑고, OCR 오인식 여부를 판정 |
+| `fields.py` | 라벨에서 제품명·유효성분명·사용기한을 뽑는 규칙 (`PharmaFieldExtractor`)과 단위 표기 정규화. 오인식 판정은 공용 `FieldExtractor`의 것을 물려받음 |
 | `kb_match.py` | 제품명을 식약처 공개 목록과 맞춤 (정확·모호·미매칭) |
 
 ### 스키마 (`src/ocr_harness/schemas/`)

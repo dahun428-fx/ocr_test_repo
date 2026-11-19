@@ -102,7 +102,7 @@ chat span의 선택 속성: `gen_ai.system_instructions_ref`, `gen_ai.response.m
 
 선행 연구 기록과의 대응: SDK 결과 1건의 `sdk.model_usage`에는 모델별 항목이 있습니다(주 모델과 보조 Haiku). 모델 하나당 chat span 하나로 풀어 적고 `ocr.model.role`로 구분합니다. `cacheCreationInputTokens`는 `gen_ai.usage.cache_write.input_tokens`, `costUSD`는 `ocr.cost.sdk_reported_usd`, `costBasis`는 `ocr.cost.basis`가 됩니다. 실패한 호출도 span을 남기고 토큰을 0으로 적습니다.
 
-**비용 장부**는 저장 형식이 아니라 `ocr_harness.common.ledger.model_calls()`가 chat span에서 뽑는 행입니다. 행의 키는 플랫폼 `model-result`와 같은 이름(`usage.inputTokens`, `usage.outputTokens`, `provider`, `routeDecisionId`)입니다.
+**비용 장부**는 저장 형식이 아니라 `ocr_harness.project.model_calls()`가 chat span에서 뽑는 행입니다. 행의 키는 플랫폼 `model-result`와 같은 이름(`usage.inputTokens`, `usage.outputTokens`, `provider`, `routeDecisionId`)입니다.
 
 ## 6. logsData (평가 이벤트)
 
@@ -156,11 +156,11 @@ chat span의 선택 속성: `gen_ai.system_instructions_ref`, `gen_ai.response.m
 | 만들어진 스키마 JSON | `src/ocr_harness/schemas/*.schema.json` |
 | 가져온 사본 (고치지 않음) | `schemas/platform/0.2.0/`, `schemas/otel-genai/76e0c19e7fe1/` |
 | 동결 스냅샷 | `schemas/released/2.0.0.json` |
-| 검증 | `ocr_harness.common.schema.validate(kind, record)` |
-| 추적·평가 이벤트 쓰기 | OpenTelemetry SDK + 공식 JSON 인코더. `ocr_harness.common.otlp`는 파일 내보내기(`JsonLinesSpanExporter`, `JsonLinesLogExporter`)와 `resource`, `finish`, `emit_evaluation`만 더함 |
+| 검증 | `ocr_harness.project.validate(kind, record)` (틀은 `ocr_harness.common.schema.SchemaRegistry`) |
+| 추적·평가 이벤트 쓰기 | OpenTelemetry SDK + 공식 JSON 인코더. `ocr_harness.common.otlp`는 파일 내보내기(`JsonLinesSpanExporter`, `JsonLinesLogExporter`)와 `Telemetry`, `finish`, `emit_evaluation`만 더함. 이 연구의 이름을 실은 `resource`, `tracer`, `logger`는 `ocr_harness.project`에 있음 |
 | 추적 읽기 | `ocr_harness.common.otlp`의 `plain_attributes`, `flatten_spans` |
-| 비용 장부 집계 | `ocr_harness.common.ledger.model_calls` |
-| id와 해시 | `ocr_harness.common.ids` |
+| 비용 장부 집계 | `ocr_harness.project.model_calls` (틀은 `ocr_harness.common.ledger.Ledger`) |
+| id와 해시 | `ocr_harness.common.ids`, 항목 id는 `ocr_harness.project.item_id` |
 
 스키마를 바꾸는 절차:
 

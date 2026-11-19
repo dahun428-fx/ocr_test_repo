@@ -8,7 +8,7 @@ from importlib import resources
 
 import pytest
 
-from ocr_harness.common.schema import KINDS, SCHEMA_VERSION, SchemaError, bundle, validate
+from ocr_harness.project import KINDS, SCHEMA_VERSION, SchemaError, bundle, validate
 
 import samples
 

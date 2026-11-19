@@ -47,5 +47,6 @@
 - 토큰과 비용은 chat span에만 적습니다. 비용 장부는 거기서 뽑는 집계입니다 (`ocr_harness.common.ledger`).
 - 추적 기록에는 원문을 넣지 않습니다. 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다.
 - 스키마의 원본은 `tools/build_schemas.py`입니다. 바꿀 때는 버전을 올리고 `schemas/released/<버전>.json` 스냅샷을 추가합니다 (docs/schema-design.md 10절).
+- **공용과 전용을 섞지 않습니다.** `ocr_harness.common`에는 이 연구의 이름(`ocr.*`, 서비스 이름, 데이터의 키)을 적지 않고 값이나 자식 클래스로 받습니다. 이 연구의 이름은 `ocr_harness/project.py` 한 곳에서 끼우고, 다른 코드는 그 파일의 함수를 부릅니다. 의약품 도메인 규칙은 `ocr_harness/pharma`에 둡니다.
 - 직접 짜기 전에 표준 구현이나 오픈소스가 있는지 먼저 봅니다. 도입할 때는 라이선스를 원문으로 확인하고, 그 도구의 출력을 검증하는 테스트를 하나 둡니다 (docs/open-source-adoption.md).
 - 주석은 한글로 넉넉히 답니다. 무엇을 하는지보다 왜 그렇게 하는지를 적습니다.

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ocr_harness.common.repo_guard import find_violations
+from ocr_harness.project import find_violations
 
 ROOT = Path(__file__).resolve().parents[1]
 # 검사기에 걸리지 않도록 실행 시점에 조립합니다.

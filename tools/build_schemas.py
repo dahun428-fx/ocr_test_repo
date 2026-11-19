@@ -14,9 +14,9 @@ import pathlib
 import sys
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "src" / "ocr_harness" / "schemas"
-# 버전과 규약 커밋은 패키지(schema.py)에 한 번만 적고 여기서 가져다 씁니다.
+# 버전과 규약 커밋은 패키지(ocr_harness.project)에 한 번만 적고 여기서 가져다 씁니다.
 sys.path.insert(0, str(OUT.parent.parent))
-from ocr_harness.common.schema import SCHEMA_VERSION, SEMCONV_COMMIT, bundle  # noqa: E402
+from ocr_harness.project import SCHEMA_VERSION, SEMCONV_COMMIT, bundle  # noqa: E402
 
 # 여러 스키마에서 같이 쓰는 값 목록. 한 곳에서만 정의해 서로 어긋나지 않게 합니다.
 AUTH_ROUTES = ["subscription_oauth", "api_key", "fake"]

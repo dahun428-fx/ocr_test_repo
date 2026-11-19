@@ -6,11 +6,12 @@
   - 파일 형식: OTLP File Exporter (JSON Lines, 한 줄이 TracesData 또는 LogsData)
 
 여기에는 SDK에 없는 얇은 부분만 둡니다.
-  - 파일로 내보내기 (파이썬 SDK에는 OTLP JSON 파일 내보내기가 없습니다)
-  - 이 연구의 규칙: resource 속성, 오류 표시, 평가 이벤트 이름
+  - 파일로 내보내기 (파이썬 SDK에는 OTLP JSON 파일 내보내기가 없습니다): JsonLinesWriter와 그 자식 둘
+  - 프로젝트 이름을 싣는 일: Telemetry (resource 속성, tracer, logger). 이름은 Profile에서 받습니다
+  - 어느 프로젝트나 같은 규칙: 오류 표시(finish), 평가 이벤트(emit_evaluation)
   - 읽기: OTLP JSON → 파이썬 값 (비용 장부와 대시보드에서 씁니다)
 
-쓴 기록이 규칙에 맞는지는 ocr_harness.common.schema.validate("tracesData" | "logsData", 줄)로 검사합니다.
+이 파일에는 특정 프로젝트의 이름이 없습니다. 이 연구의 이름은 ocr_harness.project에 있습니다.
 """
 import json
 import time
@@ -25,24 +26,40 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Status, StatusCode
 
-from ocr_harness.common.schema import SCHEMA_VERSION   # 버전 상수는 schema.py 한 곳에만 둡니다.
+from ocr_harness.common.profile import Profile
 
-SERVICE_NAME = "ocr-harness"
-SCOPE_NAME = "ocr_harness"                      # get_tracer / get_logger에 넘기는 이름
 EVALUATION_EVENT = "gen_ai.evaluation.result"   # OTel GenAI 규약의 평가 결과 이벤트 이름
 
 
 # 쓰기 ---------------------------------------------------------------------
 
-def resource(run_id: str, service_version: str) -> Resource:
-    """TracerProvider / LoggerProvider에 넘기는 resource. 실행 묶음 id와 스키마 버전이 줄마다 실립니다."""
-    # Resource.create()는 SDK 정보(telemetry.sdk.*)를 자동으로 붙이므로 쓰지 않습니다. 우리 스키마는 네 가지만 받습니다.
-    return Resource({
-        "service.name": SERVICE_NAME,
-        "service.version": service_version,
-        "ocr.run.id": run_id,
-        "ocr.schema.version": SCHEMA_VERSION,
-    })
+class Telemetry:
+    """프로젝트 하나의 추적 설정. Profile의 이름으로 resource, tracer, logger를 만들어 줍니다.
+
+    함수 여러 개에 profile을 매번 넘기는 대신 객체 하나로 묶었습니다.
+    그래야 한 실행 안에서 resource의 이름과 tracer의 이름이 서로 다른 Profile에서 나오는 실수가 없습니다.
+    """
+
+    def __init__(self, profile: Profile):
+        self.profile = profile
+
+    def resource(self, run_id: str, service_version: str) -> Resource:
+        """TracerProvider / LoggerProvider에 넘기는 resource. 실행 묶음 id와 스키마 버전이 줄마다 실립니다."""
+        # Resource.create()는 SDK 정보(telemetry.sdk.*)를 자동으로 붙이므로 쓰지 않습니다. 스키마가 네 가지만 받습니다.
+        return Resource({
+            "service.name": self.profile.service_name,
+            "service.version": service_version,
+            self.profile.attr("run.id"): run_id,
+            self.profile.attr("schema.version"): self.profile.schema_version,
+        })
+
+    def tracer(self, provider, version: str):
+        """이 프로젝트의 계측 범위 이름으로 tracer를 받습니다."""
+        return provider.get_tracer(self.profile.scope_name, version)
+
+    def logger(self, provider, version: str):
+        """이 프로젝트의 계측 범위 이름으로 logger를 받습니다 (평가 이벤트용)."""
+        return provider.get_logger(self.profile.scope_name, version)
 
 
 def finish(span, error_type: str | None = None) -> None:
@@ -78,43 +95,53 @@ def encode_logs(records) -> dict:
     return json.loads(_encode_logs(records).to_json())
 
 
-def _append_line(path: Path, line: dict) -> None:
-    with open(path, "a", encoding="utf-8", newline="\n") as handle:
-        handle.write(json.dumps(line, ensure_ascii=False) + "\n")
+class JsonLinesWriter:
+    """OTLP JSON Lines 파일에 "한 묶음 = 한 줄"로 덧붙이는 공통 뼈대 (템플릿 메서드).
 
+    span 내보내기와 로그 내보내기는 "묶음을 dict로 바꾸는 법"과 "성공을 알리는 값"만 다릅니다.
+    그 두 가지만 자식이 정하고, 파일을 여는 방식·줄바꿈·인코딩은 여기 한 곳에서 정합니다.
+    SDK의 SpanExporter / LogRecordExporter와 함께 다중 상속으로 씁니다 (이 클래스를 앞에 둡니다).
+    """
 
-class JsonLinesSpanExporter(SpanExporter):
-    """끝난 span을 OTLP JSON Lines 파일에 덧붙입니다. 내보낼 때마다 한 줄입니다."""
+    # 자식이 정하는 두 가지.
+    _success = None   # export()가 돌려줄 SDK의 성공 값
 
-    def __init__(self, path):
-        self._path = Path(path)
-
-    def export(self, spans):
-        _append_line(self._path, encode_traces(spans))
-        return SpanExportResult.SUCCESS
-
-    def shutdown(self):
-        pass
-
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True   # 줄마다 바로 쓰므로 모아 둔 것이 없습니다.
-
-
-class JsonLinesLogExporter(LogRecordExporter):
-    """평가 이벤트를 OTLP JSON Lines 파일에 덧붙입니다. 추적과 다른 파일이어야 합니다 (한 파일에 한 종류)."""
+    def _encode(self, batch) -> dict:
+        """묶음 → 파일 한 줄(dict). 자식이 구현합니다."""
+        raise NotImplementedError
 
     def __init__(self, path):
         self._path = Path(path)
 
     def export(self, batch):
-        _append_line(self._path, encode_logs(batch))
-        return LogRecordExportResult.SUCCESS
+        # newline="\n": Windows에서도 줄 끝을 LF로 고정합니다. 같은 기록이면 어느 PC에서 써도 같은 바이트여야 합니다.
+        with open(self._path, "a", encoding="utf-8", newline="\n") as handle:
+            handle.write(json.dumps(self._encode(batch), ensure_ascii=False) + "\n")
+        return self._success
 
     def shutdown(self):
-        pass
+        pass   # 내보낼 때마다 파일을 열고 닫으므로 정리할 것이 없습니다.
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True
+        return True   # 줄마다 바로 쓰므로 모아 둔 것이 없습니다.
+
+
+class JsonLinesSpanExporter(JsonLinesWriter, SpanExporter):
+    """끝난 span을 OTLP JSON Lines 파일에 덧붙입니다. 내보낼 때마다 한 줄입니다."""
+
+    _success = SpanExportResult.SUCCESS
+
+    def _encode(self, batch) -> dict:
+        return encode_traces(batch)
+
+
+class JsonLinesLogExporter(JsonLinesWriter, LogRecordExporter):
+    """평가 이벤트를 OTLP JSON Lines 파일에 덧붙입니다. 추적과 다른 파일이어야 합니다 (한 파일에 한 종류)."""
+
+    _success = LogRecordExportResult.SUCCESS
+
+    def _encode(self, batch) -> dict:
+        return encode_logs(batch)
 
 
 # 읽기 ---------------------------------------------------------------------

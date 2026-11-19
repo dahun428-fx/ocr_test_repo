@@ -1,5 +1,6 @@
-"""비용 장부는 원본이 아니라 chat span에서 뽑는 집계입니다 (ocr_harness.common.ledger)."""
-from ocr_harness.common import ledger, otlp
+"""비용 장부는 원본이 아니라 chat span에서 뽑는 집계입니다 (ocr_harness.common.ledger, 이 연구의 설정은 ocr_harness.project)."""
+from ocr_harness import project
+from ocr_harness.common import otlp
 
 import samples
 
@@ -20,18 +21,18 @@ def _run():
 
 
 def test_one_row_per_model_call_span():
-    rows = ledger.model_calls([_run()])
+    rows = project.model_calls([_run()])
     assert [row["requestModel"] for row in rows] == ["fake-model", "fake-small"]
 
 
 def test_row_carries_item_and_condition_from_the_root_span():
-    row = ledger.model_calls([_run()])[0]
+    row = project.model_calls([_run()])[0]
     assert (row["runId"], row["itemId"], row["conditionId"]) == ("run-0001", samples.ITEM, "c4")
 
 
 def test_row_uses_platform_usage_names():
     # 플랫폼 model-result 계약의 이름: usage.inputTokens, usage.outputTokens, provider, routeDecisionId
-    row = ledger.model_calls([_run()])[0]
+    row = project.model_calls([_run()])[0]
     assert row["usage"] == {"inputTokens": 250, "outputTokens": 9}
     assert (row["provider"], row["routeDecisionId"]) == ("external", "route-default")
     assert (row["modelRole"], row["authRoute"], row["requestModel"]) == ("main", "subscription_oauth", "fake-model")
@@ -40,8 +41,8 @@ def test_row_uses_platform_usage_names():
 
 
 def test_unknown_cost_is_none_and_errors_are_kept():
-    row = ledger.model_calls([_run()])[1]
+    row = project.model_calls([_run()])[1]
     assert row["cost"]["sdkReportedUsd"] is None
     assert row["cost"]["computedUsd"] == 0.004
     assert row["errorCode"] == "RATE_LIMITED"       # 실패한 호출도 장부에 남습니다 (CLAUDE.md 규칙 7, 8).
-    assert ledger.model_calls([_run()])[0]["errorCode"] is None
+    assert project.model_calls([_run()])[0]["errorCode"] is None

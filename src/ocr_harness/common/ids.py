@@ -8,13 +8,21 @@ import rfc8785
 DIGEST = re.compile(r"^sha256:([a-f0-9]{64})$")
 
 
-def item_id(image_digest: str) -> str:
-    """이미지 해시에서 항목 id를 만듭니다 (`img-` + 해시 앞 32자)."""
-    found = DIGEST.match(image_digest)
+# 플랫폼 id 형식: 소문자로 시작, 소문자·숫자·점·붙임표, 2~64자.
+PLATFORM_ID = re.compile(r"^[a-z][a-z0-9.-]{1,63}$")
+
+
+def prefixed_id(digest: str, prefix: str) -> str:
+    """해시에서 플랫폼 id를 만듭니다 (접두사 + 해시 앞 32자). 접두사는 프로젝트가 정합니다."""
+    found = DIGEST.match(digest)
     if not found:
-        raise ValueError(f"sha256 해시가 아닙니다: {image_digest!r}")
+        raise ValueError(f"sha256 해시가 아닙니다: {digest!r}")
     # 플랫폼 id는 소문자로 시작하고 64자 이내여야 해서, 접두사를 붙이고 32자만 씁니다.
-    return "img-" + found.group(1)[:32]
+    # 해시는 숫자로 시작할 수 있으므로 "소문자로 시작"은 접두사가 책임집니다.
+    value = prefix + found.group(1)[:32]
+    if not PLATFORM_ID.match(value):
+        raise ValueError(f"접두사 때문에 플랫폼 id 형식에 맞지 않습니다: {prefix!r}")
+    return value
 
 
 def canonical_json(value) -> bytes:

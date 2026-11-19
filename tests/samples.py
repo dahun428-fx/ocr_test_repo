@@ -10,6 +10,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
+from ocr_harness import project
 from ocr_harness.common import otlp
 
 D = "sha256:" + "a" * 64          # 형식만 맞춘 가짜 해시
@@ -192,9 +193,9 @@ def run_spans(specs):
     specs: (이름, 속성, 오류 코드 또는 None)의 목록. 첫 번째가 루트이고 나머지는 그 자식입니다.
     """
     exporter = InMemorySpanExporter()
-    provider = TracerProvider(resource=otlp.resource("run-0001", "0.1.0"))
+    provider = TracerProvider(resource=project.resource("run-0001", "0.1.0"))
     provider.add_span_processor(SimpleSpanProcessor(exporter))
-    tracer = provider.get_tracer(otlp.SCOPE_NAME, "0.1.0")
+    tracer = project.tracer(provider, "0.1.0")
     (root_name, root_attributes, root_error), *children = specs
     with tracer.start_as_current_span(root_name, attributes=root_attributes) as root:
         otlp.finish(root, root_error)
@@ -248,9 +249,9 @@ def logs(attributes=None):
     chat = [s for s in run_spans([("invoke_agent ocr-harness", root_attributes(), None),
                                   ("chat fake-model", chat_attributes(), None)]) if s.name.startswith("chat")][0]
     exporter = InMemoryLogRecordExporter()
-    provider = LoggerProvider(resource=otlp.resource("run-0001", "0.1.0"))
+    provider = LoggerProvider(resource=project.resource("run-0001", "0.1.0"))
     provider.add_log_record_processor(SimpleLogRecordProcessor(exporter))
-    otlp.emit_evaluation(provider.get_logger(otlp.SCOPE_NAME, "0.1.0"), chat.get_span_context(),
+    otlp.emit_evaluation(project.logger(provider, "0.1.0"), chat.get_span_context(),
                          score_attributes() if attributes is None else attributes)
     return otlp.encode_logs(exporter.get_finished_logs())
 

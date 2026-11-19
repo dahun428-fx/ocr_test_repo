@@ -10,16 +10,17 @@ from opentelemetry.sdk._logs.export import SimpleLogRecordProcessor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
-from ocr_harness.common import otlp, schema
+from ocr_harness import project
+from ocr_harness.common import otlp
 
 import samples
 
 
 def test_span_exporter_writes_otlp_json_lines_that_pass_the_schema(tmp_path):
     path = tmp_path / "traces.jsonl"
-    provider = TracerProvider(resource=otlp.resource("run-0001", "0.1.0"))
+    provider = TracerProvider(resource=project.resource("run-0001", "0.1.0"))
     provider.add_span_processor(SimpleSpanProcessor(otlp.JsonLinesSpanExporter(path)))
-    tracer = provider.get_tracer(otlp.SCOPE_NAME, "0.1.0")
+    tracer = project.tracer(provider, "0.1.0")
     with tracer.start_as_current_span("invoke_agent ocr-harness", attributes=samples.root_attributes()) as root:
         otlp.finish(root)
         with tracer.start_as_current_span("ocr", attributes=samples.ocr_attributes()) as child:
@@ -27,7 +28,7 @@ def test_span_exporter_writes_otlp_json_lines_that_pass_the_schema(tmp_path):
     lines = path.read_text("utf-8").splitlines()
     assert len(lines) == 2                       # 끝난 span마다 한 줄 (OTLP File Exporter: 한 줄이 TracesData)
     for line in lines:
-        schema.validate("tracesData", json.loads(line))
+        project.validate("tracesData", json.loads(line))
     child, root = (otlp.flatten_spans(json.loads(line))[0] for line in lines)
     assert child["parentSpanId"] == root["spanId"] and child["traceId"] == root["traceId"]
     assert root["parentSpanId"] is None
@@ -53,20 +54,20 @@ def test_resource_carries_run_id_and_schema_version():
         "service.name": "ocr-harness",
         "service.version": "0.1.0",
         "ocr.run.id": "run-0001",
-        "ocr.schema.version": schema.SCHEMA_VERSION,
+        "ocr.schema.version": project.SCHEMA_VERSION,
     }
 
 
 def test_log_exporter_writes_evaluation_events_that_pass_the_schema(tmp_path):
     path = tmp_path / "logs.jsonl"
-    provider = LoggerProvider(resource=otlp.resource("run-0001", "0.1.0"))
+    provider = LoggerProvider(resource=project.resource("run-0001", "0.1.0"))
     provider.add_log_record_processor(SimpleLogRecordProcessor(otlp.JsonLinesLogExporter(path)))
     chat = samples.run_spans([("invoke_agent ocr-harness", samples.root_attributes(), None),
                               ("chat fake-model", samples.chat_attributes(), None)])[0]
     attributes = samples.score_attributes() | {"gen_ai.evaluation.score.value": 1}   # 정수로 넘겨도
-    otlp.emit_evaluation(provider.get_logger(otlp.SCOPE_NAME, "0.1.0"), chat.get_span_context(), attributes)
+    otlp.emit_evaluation(project.logger(provider, "0.1.0"), chat.get_span_context(), attributes)
     line = json.loads(path.read_text("utf-8"))
-    schema.validate("logsData", line)
+    project.validate("logsData", line)
     event = samples.the_event(line)
     assert event["eventName"] == "gen_ai.evaluation.result"
     assert event["spanId"] == format(chat.get_span_context().span_id, "016x")      # 채점한 span에 붙습니다.
