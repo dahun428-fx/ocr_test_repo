@@ -13,6 +13,7 @@ r"""M1b: OCR 설정에 따라 "OCR이 틀리게 읽은 필드"가 얼마나 달�
 import argparse
 import collections
 import json
+import os
 import pathlib
 import statistics
 import sys
@@ -33,6 +34,8 @@ CONFIGS = {
     "server-det": PaddleOcrEngine("PP-OCRv5_server_det", KOREAN_REC),
     # 긴 변을 960으로 줄여서 검출. 입력 크기에 얼마나 민감한지 봅니다.
     "mobile-max960": PaddleOcrEngine("PP-OCRv5_mobile_det", KOREAN_REC, det_limit_side_len=960, det_limit_type="max"),
+    # 큰 검출 모델 + 줄인 입력. 원본 크기(긴 변 약 3000)에서는 CPU로 1장에 15분이 넘어 쓸 수 없었습니다.
+    "server-det-max960": PaddleOcrEngine("PP-OCRv5_server_det", KOREAN_REC, det_limit_side_len=960, det_limit_type="max"),
 }
 BASELINE = "mobile"
 B_FIELDS = ("product-name", "active-ingredient")
@@ -47,7 +50,13 @@ def main() -> None:
     parser.add_argument("--summary", required=True)
     parser.add_argument("--all", action="store_true", help="제품당 1장이 아니라 전체 이미지")
     parser.add_argument("--configs", nargs="*", default=list(CONFIGS))
+    parser.add_argument("--limit", type=int, default=0, help="앞에서부터 이 장수만 (0이면 전부). 느린 설정을 먼저 재 볼 때 씁니다")
+    parser.add_argument("--model-cache", help="PaddleOCR 모델 파일을 받아 둘 폴더. 지정하지 않으면 사용자 홈 폴더에 받습니다")
     args = parser.parse_args()
+    if args.model_cache:
+        # paddlex가 모델 파일을 두는 위치. paddleocr를 가져오기 전에 정해야 해서 맨 앞에서 설정합니다
+        # (엔진은 처음 읽을 때 가져오므로 여기서 정하면 됩니다).
+        os.environ["PADDLE_PDX_CACHE_HOME"] = args.model_cache
 
     images = {p.stem: p for p in pathlib.Path(args.images).rglob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png")}
     chosen, seen_products = [], set()
@@ -58,6 +67,8 @@ def main() -> None:
             continue
         seen_products.add(product)
         chosen.append((label_path.stem, product, extract_fields(label)))
+    if args.limit:
+        chosen = chosen[: args.limit]
 
     verdicts, per_config = {}, {}
     for name in args.configs:
@@ -105,7 +116,7 @@ def main() -> None:
 
     summary = {
         "images": len(chosen),
-        "products": len(seen_products),
+        "products": len({product for _, product, _ in chosen}),
         "sampling": "all" if args.all else "first image per product by file name",
         "baseline": BASELINE,
         "configs": per_config,
