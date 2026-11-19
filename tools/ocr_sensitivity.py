@@ -1,0 +1,120 @@
+r"""M1b: OCR 설정에 따라 "OCR이 틀리게 읽은 필드"가 얼마나 달라지는지 봅니다.
+
+주 지표의 분모가 OCR 오인식 필드라서, 엔진을 고정하기 전에 설정에 얼마나 민감한지 확인합니다.
+데이터가 있는 PC에서 실행합니다. 모델 호출은 없습니다. OCR 원문은 --cache 폴더(저장소 밖)에만 두고,
+화면과 --summary 파일에는 집계 숫자만 씁니다.
+
+    python tools/ocr_sensitivity.py --labels <라벨 폴더> --images <이미지 폴더> \
+        --cache E:\ocr-harness-data\cache\ocr --baseline-cache E:\ocr-harness-data\cache\ocr-paddle \
+        --summary E:\ocr-harness-data\m1b_ocr_sensitivity.json
+
+기본은 제품마다 이미지 1장(파일 이름 순으로 첫 장)만 봅니다. --all이면 전체를 봅니다.
+"""
+import argparse
+import collections
+import json
+import pathlib
+import statistics
+import sys
+import time
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
+from ocr_harness import project  # noqa: E402
+from ocr_harness.common.ocr import CachedOcr, compare_misreads, to_tokens  # noqa: E402
+from ocr_harness.common.ocr_paddle import PaddleOcrEngine  # noqa: E402
+
+KOREAN_REC = "korean_PP-OCRv5_mobile_rec"
+# 비교할 설정. 첫 번째가 기준(M1a에서 쓴 것)입니다.
+CONFIGS = {
+    "mobile": PaddleOcrEngine("PP-OCRv5_mobile_det", KOREAN_REC),
+    # 검출만 큰 모델로. (인식은 한국어 모델이 mobile뿐인지 실행 전에 확인합니다.)
+    "server-det": PaddleOcrEngine("PP-OCRv5_server_det", KOREAN_REC),
+    # 긴 변을 960으로 줄여서 검출. 입력 크기에 얼마나 민감한지 봅니다.
+    "mobile-max960": PaddleOcrEngine("PP-OCRv5_mobile_det", KOREAN_REC, det_limit_side_len=960, det_limit_type="max"),
+}
+BASELINE = "mobile"
+B_FIELDS = ("product-name", "active-ingredient")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--labels", required=True)
+    parser.add_argument("--images", required=True)
+    parser.add_argument("--cache", required=True, help="설정마다 하위 폴더를 만듭니다")
+    parser.add_argument("--baseline-cache", help="M1a에서 만든 기준 설정의 캐시 폴더 (설정 기록이 없어도 이어 씁니다)")
+    parser.add_argument("--summary", required=True)
+    parser.add_argument("--all", action="store_true", help="제품당 1장이 아니라 전체 이미지")
+    parser.add_argument("--configs", nargs="*", default=list(CONFIGS))
+    args = parser.parse_args()
+
+    images = {p.stem: p for p in pathlib.Path(args.images).rglob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png")}
+    chosen, seen_products = [], set()
+    for label_path in sorted(pathlib.Path(args.labels).rglob("*.json")):
+        label = json.loads(label_path.read_text(encoding="utf-8"))
+        product = label["images"][0]["product_name"]
+        if label_path.stem not in images or (not args.all and product in seen_products):
+            continue
+        seen_products.add(product)
+        chosen.append((label_path.stem, product, project.extract_fields(label)))
+
+    verdicts, per_config = {}, {}
+    for name in args.configs:
+        if name == BASELINE and args.baseline_cache:
+            engine = CachedOcr(CONFIGS[name], args.baseline_cache, adopt_unlabeled=True)
+        else:
+            engine = CachedOcr(CONFIGS[name], pathlib.Path(args.cache) / name)
+        verdict, counts, seconds, lines_total = {}, collections.Counter(), [], 0
+        products_with_b_misread = set()
+        for number, (stem, product, fields) in enumerate(chosen, 1):
+            start = time.perf_counter()
+            lines = engine.read(images[stem])
+            seconds.append(time.perf_counter() - start)
+            lines_total += len(lines)
+            tokens = to_tokens(lines)
+            for field in fields:
+                misread = project.is_misread(field, tokens)
+                verdict[f"{stem}|{field.name}"] = misread
+                counts[f"{field.name}:eligible"] += 1
+                counts[f"{field.name}:misread"] += misread
+                if misread and field.name in B_FIELDS:
+                    products_with_b_misread.add(product)
+            if number % 25 == 0:
+                print(f"{name} {number}/{len(chosen)}", flush=True)
+        verdicts[name] = verdict
+        per_config[name] = {
+            "config": engine.config,
+            "configDigest": engine.config_digest,
+            # 캐시에서 읽은 것이 섞이면 시간이 짧게 나옵니다. 중앙값은 참고용입니다.
+            "median_seconds_per_image": statistics.median(seconds) if seconds else None,
+            "mean_lines_per_image": lines_total / len(chosen) if chosen else None,
+            "fields": {
+                field: {"eligible": counts[f"{field}:eligible"], "ocr_misread": counts[f"{field}:misread"]}
+                for field in ("product-name", "active-ingredient", "expiry")
+            },
+            "b_type": {
+                "eligible": sum(counts[f"{f}:eligible"] for f in B_FIELDS),
+                "ocr_misread": sum(counts[f"{f}:misread"] for f in B_FIELDS),
+                "products_with_misread": len(products_with_b_misread),
+            },
+        }
+
+    def b_only(verdict: dict) -> dict:
+        return {key: value for key, value in verdict.items() if key.split("|")[1] in B_FIELDS}
+
+    summary = {
+        "images": len(chosen),
+        "products": len(seen_products),
+        "sampling": "all" if args.all else "first image per product by file name",
+        "baseline": BASELINE,
+        "configs": per_config,
+        "b_type_vs_baseline": {
+            name: compare_misreads(b_only(verdicts[BASELINE]), b_only(verdicts[name]))
+            for name in args.configs if name != BASELINE and BASELINE in verdicts
+        },
+    }
+    pathlib.Path(args.summary).write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
