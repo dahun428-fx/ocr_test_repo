@@ -19,9 +19,11 @@ import sys
 import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
-from ocr_harness import project  # noqa: E402
 from ocr_harness.common.ocr import CachedOcr, compare_misreads, to_tokens  # noqa: E402
 from ocr_harness.common.ocr_paddle import PaddleOcrEngine  # noqa: E402
+# ocr_harness.project를 거치지 않고 필드 규칙만 가져옵니다. project는 추적 패키지(OpenTelemetry)까지 불러오는데,
+# OCR을 돌리는 PC 환경에는 그 버전이 없고 이 스크립트는 추적을 쓰지 않습니다.
+from ocr_harness.pharma.fields import extract_fields, is_misread  # noqa: E402
 
 KOREAN_REC = "korean_PP-OCRv5_mobile_rec"
 # 비교할 설정. 첫 번째가 기준(M1a에서 쓴 것)입니다.
@@ -55,7 +57,7 @@ def main() -> None:
         if label_path.stem not in images or (not args.all and product in seen_products):
             continue
         seen_products.add(product)
-        chosen.append((label_path.stem, product, project.extract_fields(label)))
+        chosen.append((label_path.stem, product, extract_fields(label)))
 
     verdicts, per_config = {}, {}
     for name in args.configs:
@@ -72,7 +74,7 @@ def main() -> None:
             lines_total += len(lines)
             tokens = to_tokens(lines)
             for field in fields:
-                misread = project.is_misread(field, tokens)
+                misread = is_misread(field, tokens)
                 verdict[f"{stem}|{field.name}"] = misread
                 counts[f"{field.name}:eligible"] += 1
                 counts[f"{field.name}:misread"] += misread
