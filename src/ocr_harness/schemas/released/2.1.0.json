@@ -1,17 +1,17 @@
 {
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "2.1.0",
   "platformContractVersion": "0.2.0",
   "semconvCommit": "76e0c19e7fe1",
   "schemas": {
     "item": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/item.schema.json",
+      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/item.schema.json",
       "title": "item",
       "description": "평가 항목 1건(이미지 1장). 항목 1건의 형식에는 공통 표준이 없어 자체 정의입니다. 형식 규칙(id, semver, 해시)은 플랫폼 계약 0.2.0을 따릅니다. 정의하지 않은 키는 거부하므로 촬영자 개인정보가 들어올 수 없습니다.",
       "type": "object",
       "properties": {
         "schemaVersion": {
-          "const": "2.0.0",
+          "const": "2.1.0",
           "description": "이 기록이 따르는 스키마 묶음의 버전."
         },
         "recordType": {
@@ -21,7 +21,7 @@
         "itemId": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9.-]{1,63}$",
-          "description": "항목 id. `img-` + 이미지 해시 앞 32자 (ocr_harness.ids.item_id)."
+          "description": "항목 id. `img-` + 이미지 해시 앞 32자 (ocr_harness.project.item_id)."
         },
         "imageDigest": {
           "type": "string",
@@ -192,13 +192,13 @@
     },
     "conditionManifest": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/condition-manifest.schema.json",
+      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/condition-manifest.schema.json",
       "title": "conditionManifest",
-      "description": "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.ids.manifest_digest).",
+      "description": "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.common.ids.manifest_digest).",
       "type": "object",
       "properties": {
         "schemaVersion": {
-          "const": "2.0.0",
+          "const": "2.1.0",
           "description": "이 기록이 따르는 스키마 묶음의 버전."
         },
         "recordType": {
@@ -462,7 +462,7 @@
     },
     "tracesData": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/traces-data.schema.json",
+      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/traces-data.schema.json",
       "title": "tracesData",
       "description": "추적 파일의 한 줄. OTLP File Exporter 형식(JSON Lines, 한 줄이 TracesData)이고 OTLP JSON 인코딩을 따릅니다. 단계 1개가 span 1개, 모델 호출 1회가 chat span 1개입니다. 토큰과 비용은 chat span에만 적고 비용 장부는 거기서 뽑습니다. 원문은 넣지 않고 해시와 참조만 둡니다.",
       "type": "object",
@@ -607,7 +607,7 @@
                                 "properties": {
                                   "stringValue": {
                                     "type": "string",
-                                    "const": "2.0.0"
+                                    "const": "2.1.0"
                                   }
                                 },
                                 "required": [
@@ -2751,7 +2751,8 @@
                                             "type": "string",
                                             "enum": [
                                               "main",
-                                              "auxiliary"
+                                              "auxiliary",
+                                              "ocr"
                                             ]
                                           }
                                         },
@@ -2759,7 +2760,7 @@
                                           "stringValue"
                                         ],
                                         "additionalProperties": false,
-                                        "description": "주 모델인지, SDK가 따로 부른 보조 모델인지."
+                                        "description": "주 모델인지, SDK가 따로 부른 보조 모델인지, OCR 단계에서 이미지를 읽은 모델인지."
                                       }
                                     }
                                   }
@@ -2868,7 +2869,7 @@
                                           "intValue"
                                         ],
                                         "additionalProperties": false,
-                                        "description": "SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트)."
+                                        "description": "SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트). 하네스가 셀 수 없는 입력(이미지)이면 속성을 뺍니다."
                                       }
                                     }
                                   }
@@ -4044,19 +4045,6 @@
                                         "type": "object",
                                         "properties": {
                                           "key": {
-                                            "const": "ocr.usage.hidden_context_tokens"
-                                          }
-                                        },
-                                        "required": [
-                                          "key"
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "contains": {
-                                        "type": "object",
-                                        "properties": {
-                                          "key": {
                                             "const": "ocr.cost.price_table.version"
                                           }
                                         },
@@ -4223,7 +4211,7 @@
     },
     "logsData": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/logs-data.schema.json",
+      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/logs-data.schema.json",
       "title": "logsData",
       "description": "평가 이벤트 파일의 한 줄. OTLP File Exporter 형식(한 줄이 LogsData)입니다. 채점 1건이 OTel GenAI 규약의 gen_ai.evaluation.result 이벤트 1개입니다. 조건 × 지표의 집계는 플랫폼 evaluation 기록에 따로 적습니다.",
       "type": "object",
@@ -4368,7 +4356,7 @@
                                 "properties": {
                                   "stringValue": {
                                     "type": "string",
-                                    "const": "2.0.0"
+                                    "const": "2.1.0"
                                   }
                                 },
                                 "required": [
@@ -5312,13 +5300,13 @@
     },
     "rawPayload": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/raw-payload.schema.json",
+      "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/raw-payload.schema.json",
       "title": "rawPayload",
       "description": "원문 저장 기록. 추적에는 원문을 넣지 않으므로 여기에 두고 해시로 참조합니다. 저장소에 올리지 않고 사용자 PC에만 둡니다.",
       "type": "object",
       "properties": {
         "schemaVersion": {
-          "const": "2.0.0",
+          "const": "2.1.0",
           "description": "이 기록이 따르는 스키마 묶음의 버전."
         },
         "recordType": {
@@ -5343,7 +5331,7 @@
         "digest": {
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$",
-          "description": "content의 SHA-256 (ocr_harness.ids.content_digest). span은 `raw://` + 이 값으로 참조합니다."
+          "description": "content의 SHA-256 (ocr_harness.common.ids.content_digest). span은 `raw://` + 이 값으로 참조합니다."
         },
         "kind": {
           "enum": [

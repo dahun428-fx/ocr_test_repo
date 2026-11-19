@@ -23,7 +23,7 @@ from ocr_harness.pharma.fields import extract_fields, is_misread  # noqa: F401  
 # 버전 --------------------------------------------------------------------
 
 # 이 저장소가 정의하는 스키마 묶음의 버전. 스키마를 바꾸면 올리고 released 스냅샷을 추가합니다.
-SCHEMA_VERSION = "2.0.0"
+SCHEMA_VERSION = "2.1.0"
 # 사본으로 가져온 플랫폼 계약의 버전.
 PLATFORM_CONTRACT_VERSION = "0.2.0"
 # 사본으로 가져온 OTel GenAI 시맨틱 규약의 커밋.

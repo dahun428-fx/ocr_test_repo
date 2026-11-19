@@ -48,7 +48,7 @@ EVID = pid("근거가 되는 knowledgeDocument의 documentId. 채점과 분석�
 schemas = {}
 schemas["item.schema.json"] = record("item.schema.json", "item",
     "평가 항목 1건(이미지 1장). 항목 1건의 형식에는 공통 표준이 없어 자체 정의입니다. 형식 규칙(id, semver, 해시)은 플랫폼 계약 0.2.0을 따릅니다. 정의하지 않은 키는 거부하므로 촬영자 개인정보가 들어올 수 없습니다.", {
-    "itemId": pid("항목 id. `img-` + 이미지 해시 앞 32자 (ocr_harness.ids.item_id)."),
+    "itemId": pid("항목 id. `img-` + 이미지 해시 앞 32자 (ocr_harness.project.item_id)."),
     "imageDigest": digest("이미지 파일 내용의 SHA-256."),
     "datasetVersion": semver("이 항목이 속한 평가셋 버전 (SemVer). 동결한 버전은 바꾸지 않습니다."),
     "sourceFormat": pid("원본 라벨 형식의 이름. 형식마다 수집 어댑터를 따로 둡니다."),
@@ -71,7 +71,7 @@ schemas["item.schema.json"] = record("item.schema.json", "item",
 
 component = lambda text: d({"oneOf": [{"type": "null"}, obj({"id": pid("구현 id."), "version": semver("구현 버전.")})]}, text + " 쓰지 않으면 null (키는 생략할 수 없습니다).")
 schemas["condition-manifest.schema.json"] = record("condition-manifest.schema.json", "conditionManifest",
-    "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.ids.manifest_digest).", {
+    "실험 조건 하나의 불변 선언. 실험 설정에는 공통 표준이 없어 구조는 자체 정의입니다. 이 기록을 RFC 8785로 정규화한 JSON의 SHA-256이 manifestDigest입니다 (ocr_harness.common.ids.manifest_digest).", {
     "conditionId": pid("조건 id (c0~c4, ck 등). 닫힌 목록이 아닙니다."),
     "version": semver("조건 선언의 버전. 플랫폼 evaluation 계약의 agentVersion에 들어갑니다."),
     "model": d(obj({"requestModel": d({"type": "string", "minLength": 1}, "요청할 모델 id (OTel gen_ai.request.model과 같은 값)."),
@@ -159,10 +159,10 @@ SPAN_ATTRS = {
     "ocr.history.candidates": SA("이력 후보 턴 id.", **idp),
     "ocr.history.excluded": KA("제외한 턴과 사유.", {"id": S("턴 id.", **idp), "reason": S("제외 사유.", **idp)}, ["id", "reason"]),
     "ocr.prompt.digest": S("모델에 보낸 최종 프롬프트의 해시.", **dg),
-    "ocr.model.role": S("주 모델인지, SDK가 따로 부른 보조 모델인지.", enum=["main", "auxiliary"]),
+    "ocr.model.role": S("주 모델인지, SDK가 따로 부른 보조 모델인지, OCR 단계에서 이미지를 읽은 모델인지.", enum=["main", "auxiliary", "ocr"]),
     "ocr.model.auth_route": S("인증 경로.", enum=AUTH_ROUTES),
     "ocr.model.attempt": I("재시도 번호 (0부터). 재시도마다 span을 따로 남깁니다."),
-    "ocr.usage.hidden_context_tokens": I("SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트).", negative=True),
+    "ocr.usage.hidden_context_tokens": I("SDK가 보고한 입력 합계에서 하네스가 센 합계를 뺀 값 (SDK가 붙인 숨은 컨텍스트). 하네스가 셀 수 없는 입력(이미지)이면 속성을 뺍니다.", negative=True),
     "ocr.cost.sdk_reported_usd": F("SDK가 보고한 비용(USD). 구독에서는 청구액이 아닌 환산값. 모르면 속성을 뺍니다.", minimum=0),
     "ocr.cost.computed_usd": F("가격표로 직접 계산한 비용(USD). 모르면 속성을 뺍니다.", minimum=0),
     "ocr.cost.price_table.version": S("계산에 쓴 가격표의 버전.", minLength=1),
@@ -183,7 +183,7 @@ REQUIRED = {
     "chat": ["gen_ai.operation.name", "gen_ai.provider.name", "gen_ai.request.model", "gen_ai.usage.input_tokens",
              "gen_ai.usage.output_tokens", "gen_ai.usage.cache_read.input_tokens", "gen_ai.usage.cache_write.input_tokens",
              "ocr.prompt.digest", "ocr.model.role", "ocr.model.auth_route", "ocr.model.attempt", "platform.model.provider",
-             "platform.route_decision.id", "ocr.usage.hidden_context_tokens", "ocr.cost.price_table.version"],
+             "platform.route_decision.id", "ocr.cost.price_table.version"],
     "postprocess": ["platform.guardrail.mode", "ocr.postprocess.kind", "ocr.postprocess.rules",
                     "ocr.output.before.digest", "ocr.output.after.digest"],
 }
@@ -258,7 +258,7 @@ schemas["raw-payload.schema.json"] = record("raw-payload.schema.json", "rawPaylo
     "runId": pid("실행 묶음 id."),
     "traceId": d({"type": "string", "pattern": TRACE_P}, "이 원문이 나온 실행의 추적 id."),
     "spanId": d({"type": "string", "pattern": SPAN_P}, "이 원문이 나온 span의 id."),
-    "digest": digest("content의 SHA-256 (ocr_harness.ids.content_digest). span은 `raw://` + 이 값으로 참조합니다."),
+    "digest": digest("content의 SHA-256 (ocr_harness.common.ids.content_digest). span은 `raw://` + 이 값으로 참조합니다."),
     "kind": d({"enum": ["ocr_output", "retrieval_query", "input_messages", "output_messages", "postprocess_output"]}, "원문의 종류."),
     "content": d({}, "원문. input_messages와 output_messages는 OTel GenAI 규약의 메시지 JSON 스키마 구조(role, parts)를 따르고, 나머지는 글자열입니다."),
     "retention": d({"oneOf": [{"const": "study"}, {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}]}, "보존 기한. 날짜(YYYY-MM-DD) 또는 연구 기간 동안(study)."),

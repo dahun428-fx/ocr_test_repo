@@ -37,7 +37,7 @@ pytest -q
 | --- | --- |
 | `research-plan.md` | 무엇을 왜 재는가. 연구 질문, 조건, 가설, 통계, 비용 측정 |
 | `implementation-plan.md` | 어떤 순서로 만드는가. M0~M8 단계와 관문 |
-| `schema-design.md` | 기록 형식의 설계와 근거 (스키마 2.0.0) |
+| `schema-design.md` | 기록 형식의 설계와 근거 (스키마 2.1.0) |
 | `open-source-adoption.md` | 오픈소스 도입 판단과 이유 |
 | `m1a-results.md` | M1a 탐색의 집계 숫자와 관문 판단 |
 | `TODO.md` | 남은 일과 사용자 확인 대기 항목 |
@@ -81,7 +81,7 @@ pytest -q
 | `raw-payload.schema.json` | 저장소 밖에 두는 원문 기록의 형식 | 공용 |
 | `platform/0.2.0/*.json` | 플랫폼 계약 사본 2개 (평가 결과 `evaluation`, 지식 문서 `knowledgeDocument`는 `retrieval.schema.json`의 문서 형식). 고치지 않음 | 공용 |
 | `otel-genai/76e0c19e7fe1/*` | OTel 메시지 스키마 사본 2개와 출처·라이선스 안내. 고치지 않음 | 공용 |
-| `released/2.0.0.json` | 스키마 2.0.0 전체를 묶은 동결 스냅샷 | - |
+| `released/2.1.0.json` | 스키마 2.1.0 전체를 묶은 동결 스냅샷 | - |
 
 위 다섯 개 `*.schema.json`과 스냅샷은 손으로 고치지 않고 `tools/build_schemas.py`가 만듭니다.
 

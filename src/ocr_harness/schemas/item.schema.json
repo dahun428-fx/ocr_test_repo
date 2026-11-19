@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.0.0/item.schema.json",
+  "$id": "https://github.com/dahun428-fx/ocr_test_repo/schemas/2.1.0/item.schema.json",
   "title": "item",
   "description": "평가 항목 1건(이미지 1장). 항목 1건의 형식에는 공통 표준이 없어 자체 정의입니다. 형식 규칙(id, semver, 해시)은 플랫폼 계약 0.2.0을 따릅니다. 정의하지 않은 키는 거부하므로 촬영자 개인정보가 들어올 수 없습니다.",
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "const": "2.0.0",
+      "const": "2.1.0",
       "description": "이 기록이 따르는 스키마 묶음의 버전."
     },
     "recordType": {
@@ -16,7 +16,7 @@
     "itemId": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9.-]{1,63}$",
-      "description": "항목 id. `img-` + 이미지 해시 앞 32자 (ocr_harness.ids.item_id)."
+      "description": "항목 id. `img-` + 이미지 해시 앞 32자 (ocr_harness.project.item_id)."
     },
     "imageDigest": {
       "type": "string",

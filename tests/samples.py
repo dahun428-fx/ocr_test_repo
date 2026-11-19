@@ -17,7 +17,7 @@ D = "sha256:" + "a" * 64          # 형식만 맞춘 가짜 해시
 TRACE = "0123456789abcdef0123456789abcdef"   # traceId: 16진수 32자리
 SPAN = "0123456789abcdef"                    # spanId: 16진수 16자리
 PARENT = "fedcba9876543210"
-V = "2.0.0"                        # 스키마 버전
+V = "2.1.0"                        # 스키마 버전
 ITEM = "img-" + "a" * 32
 
 

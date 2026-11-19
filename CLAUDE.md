@@ -14,7 +14,7 @@
 | [docs/implementation-plan.md](docs/implementation-plan.md) | 구현 플랜 v3 (M0~M8), 증분 데이터 규칙, 관문 |
 | [docs/TODO.md](docs/TODO.md) | 지금 할 일과 사용자 확인 대기 항목 |
 | [docs/HISTORY.md](docs/HISTORY.md) | 결정과 변경 기록 |
-| [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 (스키마 2.0.0: 추적·평가 이벤트는 OTLP JSON, 플랫폼 계약 0.2.0 대응) |
+| [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 (스키마 2.1.0: 추적·평가 이벤트는 OTLP JSON, 플랫폼 계약 0.2.0 대응) |
 | [docs/open-source-adoption.md](docs/open-source-adoption.md) | 오픈소스 도입 검토: 도입한 것, 단계별로 도입할 것, 도입하지 않는 것과 이유 |
 | [docs/m1a-results.md](docs/m1a-results.md) | M1a 탐색 결과 (집계 숫자) |
 

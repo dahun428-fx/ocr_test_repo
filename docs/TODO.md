@@ -15,7 +15,7 @@
 
 ## 1차: 세로 한 줄
 
-M0(저장소 골격, 스키마 2.0.0)과 M1a(탐색)는 끝났습니다. 내용은 [HISTORY.md](HISTORY.md)와 [m1a-results.md](m1a-results.md)에 있습니다.
+M0(저장소 골격, 스키마 2.1.0)과 M1a(탐색)는 끝났습니다. 내용은 [HISTORY.md](HISTORY.md)와 [m1a-results.md](m1a-results.md)에 있습니다.
 
 ### M1b 수집기
 - [ ] OCR 설정 민감도 확인 (mobile·server 모델, 입력 크기)과 엔진 고정
@@ -27,7 +27,6 @@ M0(저장소 골격, 스키마 2.0.0)과 M1a(탐색)는 끝났습니다. 내용�
 - [ ] 제품 단위 고정 해시 분할
 - [ ] PII 제거
 - [ ] 데이터 품질 리포트 (빈 글자, 유형 코드 분포, 형식 차이)
-- [ ] 다음에 스키마 버전을 올릴 때: 스키마 설명 글의 모듈 경로(`ocr_harness.ids`)를 새 위치(`ocr_harness.common.ids`)로 고치기 (항목 id는 이제 `ocr_harness.project.item_id`). 2.0.0은 동결이라 그대로 둠
 - [ ] M1a 숫자 중 스크립트로 재현되지 않는 것을 수집기로 다시 계산해 대조 ([m1a-results.md](m1a-results.md) "재현 범위"). 유효성분명 적격 수 차이(156~157·119제품 대 157·120제품)의 원인 확인
 - [ ] 평가셋마다 Croissant 1.1 설명 파일 (`mlcroissant` 확인 포함. 라이선스·출처는 데이터 이용약관 확인 후)
 - [ ] 라벨 읽기(제품명, 단어 상자)를 수집 어댑터 한 곳으로 모으기. 지금은 `pharma/fields.py`와 탐색 스크립트 3개에 흩어져 있음. 공용 `FieldExtractor`처럼 기반 클래스를 공용에 두고 패키징 형식마다 자식을 둠
