@@ -1,6 +1,6 @@
 """기록 7종 검증 테스트 (스키마 2.0.0). 정답이 알려진 합성 기록만 씁니다.
 
-설계와 근거: docs/schema-design.md, docs/schema-standards-review.md
+설계와 근거: docs/schema-design.md
 """
 import hashlib
 import json
@@ -494,10 +494,6 @@ def test_raw_payload_other_kinds_are_plain_text(kind):
 def test_current_schemas_equal_the_released_snapshot():
     released = json.loads(SCHEMAS.joinpath("released", f"{SCHEMA_VERSION}.json").read_text("utf-8"))
     assert bundle() == released, "스키마를 바꿨다면 버전을 올리고 새 스냅샷을 추가한 뒤 HISTORY에 이유를 적으세요"
-
-
-def test_previous_snapshot_is_kept_as_a_record():
-    assert json.loads(SCHEMAS.joinpath("released", "1.0.0.json").read_text("utf-8"))["schemaVersion"] == "1.0.0"
 
 
 # 오류 메시지 ---------------------------------------------------------------

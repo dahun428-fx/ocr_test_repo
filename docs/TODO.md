@@ -4,17 +4,8 @@
 
 ## 사용자 확인 대기
 
-- [x] 스키마 v2 ([schema-design.md](schema-design.md)) 확정과 구현 (기록 8종, 스키마 버전 1.0.0)
-- [x] 스키마 표준 대조 수정안 ([schema-standards-review.md](schema-standards-review.md)) 채택, 스키마 2.0.0 구현 (추적·평가 이벤트를 OTLP JSON으로)
-- [ ] M1b에서 평가셋마다 Croissant 1.1 설명 파일 만들기 (라이선스·출처는 데이터 이용약관 확인 후)
-- [ ] 실제 추적 파일을 OTel 수집기나 뷰어에 넣어 읽히는지 확인 (M3 기준선 실행 때)
-- [ ] M1b: 라벨 읽기(제품명, 단어 상자)를 수집 어댑터 한 곳으로 모으기. 지금은 `fields.py`와 탐색 스크립트 3개에 흩어져 있음
-- [ ] M1b: `spikes/m1a_field_restore.py`가 `fields.py`의 정규식·정규화를 복사해 쓰고 있고 내용이 조금 다름. PC에서 다시 돌려 숫자를 확인할 수 있을 때 `fields.py` 것을 가져다 쓰도록 고치기
-- [ ] OpenTelemetry Weaver로 속성 규칙을 정의·검사할 수 있는지 확인 ([open-source-adoption.md](open-source-adoption.md) 4절). 사용자 확인 후 진행
-- [ ] 각 단계에 들어갈 때 오픈소스 후보를 작은 확인 작업으로 검증 (M1b `mlcroissant`, M3 `jiwer`, M4 DuckDB와 추적 화면, M5 `bm25s`·`kiwipiepy`·`rapidfuzz`, M7 `scipy.stats`)
-- [ ] 사용자 결정: gitleaks 추가 여부(커밋 전 검사와 함께), M4에서 추적 뷰어를 쓸지("수집 서버를 두지 않는다" 규칙 조정 필요)
-- [ ] 인터페이스는 구현이 둘 이상 생기는 곳에만: 수집 어댑터(M1b, 데이터 형식별), 모델 경로(M3, 가짜 모델과 SDK). 상속 대신 Protocol과 함수 조합으로
 - [ ] M1a 결과 확인과 M1b(수집기) 착수 확정
+- [ ] GitHub 저장소 설정에서 Secret scanning과 Push protection 켜기 (소유자만 가능, [open-source-adoption.md](open-source-adoption.md) 6절)
 - [ ] 데이터 이용약관이 외부 모델 전송을 허용하는지 확인 (M3 선행 조건)
 - [ ] 데이터 공식 설명서 확보 (라벨 유형 코드 정의)
 - [ ] 추가 데이터의 규모와 도착 시점
@@ -24,20 +15,7 @@
 
 ## 1차: 세로 한 줄
 
-### M0 저장소 골격
-- [x] CLAUDE.md, 연구 플랜, 구현 플랜, TODO, HISTORY 작성
-- [x] 폴더 구조와 Python 프로젝트 설정
-- [x] 스키마 4종(v1) → 8종(v2)으로 교체: item, knowledgeDocument, conditionManifest, span, rawPayload, modelCall, fieldScore, evaluation
-- [x] 스키마 검증 테스트와 CI
-- [x] 데이터·개인정보가 커밋되지 않는지 검사하는 테스트
-
-### M1a 탐색
-- [x] 20장으로 단어 조각 → 필드 값 복원 시험, 복원 정확도 보고
-- [x] 유형 코드 뜻 확인 (표본 확인. 공식 설명서로 재확인 필요)
-- [x] 필드 종류별 복원 성공 수 / 대상 수 기록
-- [x] 제품 152종 ↔ 식약처 공개 의약품 정보: 정확 133, 모호 15, 미매칭 4
-- [x] 로컬 OCR 실행: B 유형 적격 338, OCR 오인식 150 (113제품)
-- [x] 관문 판단을 HISTORY에 기록
+M0(저장소 골격, 스키마 2.0.0)과 M1a(탐색)는 끝났습니다. 내용은 [HISTORY.md](HISTORY.md)와 [m1a-results.md](m1a-results.md)에 있습니다.
 
 ### M1b 수집기
 - [ ] OCR 설정 민감도 확인 (mobile·server 모델, 입력 크기)과 엔진 고정
@@ -46,6 +24,9 @@
 - [ ] 제품 단위 고정 해시 분할
 - [ ] PII 제거
 - [ ] 데이터 품질 리포트 (빈 글자, 유형 코드 분포, 형식 차이)
+- [ ] 평가셋마다 Croissant 1.1 설명 파일 (`mlcroissant` 확인 포함. 라이선스·출처는 데이터 이용약관 확인 후)
+- [ ] 라벨 읽기(제품명, 단어 상자)를 수집 어댑터 한 곳으로 모으기. 지금은 `fields.py`와 탐색 스크립트 3개에 흩어져 있음. 인터페이스는 Protocol로, 상속은 쓰지 않음
+- [ ] `spikes/m1a_field_restore.py`가 `fields.py`의 정규식·정규화를 복사해 쓰고 내용이 조금 다름. PC에서 숫자를 다시 확인할 수 있을 때 `fields.py` 것을 쓰도록 고치기
 
 ### M2 정답 생성
 - [ ] 필드 정답 자동 추출
@@ -59,15 +40,19 @@
 - [ ] 가짜 모델로 C0·C1 전 과정 통과
 - [ ] Haiku 개발용 기준 점수, 건당 토큰, 한도 소모 측정
 - [ ] Sonnet 50건으로 호출 안정성·비용 확인
+- [ ] 실제 추적 파일을 OTel 수집기와 가벼운 뷰어에 넣어 읽히는지 확인
+- [ ] M3 직전: Weaver 시험 (chat span 하나를 레지스트리로 옮겨 live-check까지, [open-source-adoption.md](open-source-adoption.md) 4절)
+- [ ] 오픈소스 후보 확인: `jiwer`, 필요하면 `tenacity`
 
 ### M4 첫 대시보드
 - [ ] 정적 HTML 생성기 (정확도 차이, 비용, 실패 집계)
 - [ ] 숫자와 원본 집계 일치 검사
+- [ ] 오픈소스 후보 확인: DuckDB
 
 ## 2차: 하네스와 본 실험
 
-- [ ] M5 지식베이스 구축과 색인 금지 대상 검사
+- [ ] M5 지식베이스 구축과 색인 금지 대상 검사 (후보 확인: `bm25s`, `kiwipiepy`, `rapidfuzz`)
 - [ ] M6 하네스 단일 턴 2×2 (출력 후처리 → 검색 → 컨텍스트 구성), CK 진단 조건
 - [ ] M6p Sonnet C1·C4 짝지은 파일럿, 제품 단위 검정력으로 규모 산정
-- [ ] M7 분석 계획 사전 등록(주 지표, 분모, 비열등 한계), 본 실험
+- [ ] M7 분석 계획 사전 등록(주 지표, 분모, 비열등 한계), 본 실험 (후보 확인: `scipy.stats`)
 - [ ] M8 이력 선별 별도 실험

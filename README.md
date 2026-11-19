@@ -7,8 +7,10 @@ OCR → 모델 조건과 OCR → 하네스(검색·컨텍스트 구성·이력 �
 - 구현 플랜: [docs/implementation-plan.md](docs/implementation-plan.md)
 - 할 일: [docs/TODO.md](docs/TODO.md)
 - 기록: [docs/HISTORY.md](docs/HISTORY.md)
+- 스키마 설계: [docs/schema-design.md](docs/schema-design.md)
+- 오픈소스 도입 검토: [docs/open-source-adoption.md](docs/open-source-adoption.md)
 
-현재 상태: 설계 단계입니다. 코드는 아직 없습니다. 데이터는 이 저장소에 포함되지 않습니다.
+현재 상태: M0(골격)과 M1a(탐색)를 마쳤고 다음은 M1b(수집기)입니다. 데이터는 이 저장소에 포함되지 않습니다.
 
 ## 개발
 

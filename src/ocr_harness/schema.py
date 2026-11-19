@@ -1,4 +1,4 @@
-"""JSONL 기록 스키마 7종 검증 (설계: docs/schema-design.md, 표준 대조: docs/schema-standards-review.md).
+"""JSONL 기록 스키마 7종 검증 (설계: docs/schema-design.md).
 
   item, conditionManifest, rawPayload   이 저장소가 정의 (형식 규칙은 플랫폼 계약)
   tracesData, logsData                  OTLP JSON 형식 + 이 저장소의 속성 규칙

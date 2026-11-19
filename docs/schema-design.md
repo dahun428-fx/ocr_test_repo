@@ -1,6 +1,6 @@
 # 스키마 설계 (스키마 2.0.0)
 
-상태: **확정, 구현 완료.** 2026-11-19에 사용자가 두 번 결정했습니다. (1) 플랫폼 계약에 맞춘 v2 권고 5건 채택(1.0.0), (2) 표준 형식에 맞추는 수정안 7건 전부 채택(2.0.0, [schema-standards-review.md](schema-standards-review.md)).
+상태: **확정, 구현 완료.** 2026-11-19에 사용자가 두 번 결정했습니다. (1) 플랫폼 계약에 맞춘 v2 권고 5건 채택(1.0.0), (2) 표준 형식에 맞추는 수정안 7건 전부 채택(2.0.0). 1.0.0은 실행 기록을 만든 적이 없어 스냅샷을 두지 않습니다.
 
 목표는 두 가지입니다. 공개 표준이 있는 곳은 그 형식을 그대로 쓰고, [aiagent_platform_core_system_architecture](https://github.com/dahun428-fx/aiagent_platform_core_system_architecture)(이하 플랫폼)에 바꾸지 않고 넣을 수 있게 합니다.
 
@@ -153,7 +153,7 @@ OTel의 `gen_ai.evaluation.explanation`(자유 글)은 정답이나 원문이 �
 | 스키마의 원본 (표로 정의) | `tools/build_schemas.py` |
 | 만들어진 스키마 JSON | `src/ocr_harness/schemas/*.schema.json` |
 | 가져온 사본 (고치지 않음) | `schemas/platform/0.2.0/`, `schemas/otel-genai/76e0c19e7fe1/` |
-| 동결 스냅샷 | `schemas/released/2.0.0.json` (이전 `1.0.0.json`은 기록으로 보관) |
+| 동결 스냅샷 | `schemas/released/2.0.0.json` |
 | 검증 | `ocr_harness.schema.validate(kind, record)` |
 | 추적·평가 이벤트 쓰기 | OpenTelemetry SDK + 공식 JSON 인코더. `ocr_harness.otlp`는 파일 내보내기(`JsonLinesSpanExporter`, `JsonLinesLogExporter`)와 `resource`, `finish`, `emit_evaluation`만 더함 |
 | 추적 읽기 | `ocr_harness.otlp`의 `plain_attributes`, `flatten_spans` |

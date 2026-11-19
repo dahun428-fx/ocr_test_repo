@@ -15,7 +15,6 @@
 | [docs/TODO.md](docs/TODO.md) | 지금 할 일과 사용자 확인 대기 항목 |
 | [docs/HISTORY.md](docs/HISTORY.md) | 결정과 변경 기록 |
 | [docs/schema-design.md](docs/schema-design.md) | 스키마 설계 (스키마 2.0.0: 추적·평가 이벤트는 OTLP JSON, 플랫폼 계약 0.2.0 대응) |
-| [docs/schema-standards-review.md](docs/schema-standards-review.md) | 1.0.0과 표준의 차이를 대조한 기록 (2.0.0의 근거) |
 | [docs/open-source-adoption.md](docs/open-source-adoption.md) | 오픈소스 도입 검토: 도입한 것, 단계별로 도입할 것, 도입하지 않는 것과 이유 |
 | [docs/m1a-results.md](docs/m1a-results.md) | M1a 탐색 결과 (집계 숫자) |
 
@@ -43,7 +42,7 @@
 - 문서와 주석은 한국어로 씁니다.
 - 결정이 바뀌면 `docs/HISTORY.md`에 날짜와 이유를 적고, `docs/TODO.md`를 갱신합니다.
 - 테스트를 먼저 쓰고 구현합니다. 채점기와 스키마는 정답이 알려진 합성 항목으로 단위 테스트합니다.
-- 저장 형식은 JSONL 파일입니다. DB나 수집 서버는 두지 않습니다.
+- 연구 기록의 원본은 JSONL 파일입니다. 뷰어나 검사 도구 같은 서버는 그 파일을 읽는 보조 도구로만 쓰고, 서버에만 있는 기록을 만들지 않습니다.
 - **표준이 있으면 그 형식을 그대로 씁니다.** 추적과 평가 이벤트는 OTLP JSON(OTLP File Exporter 형식)이고, OpenTelemetry SDK로 만들어 `ocr_harness.otlp`의 내보내기로 파일에 씁니다. OTLP JSON을 손으로 조립하지 않습니다. 속성 이름은 OpenTelemetry GenAI 규약(`gen_ai.*`), 플랫폼 개념(`platform.*`), 이 연구의 자체 정의(`ocr.*`)로 접두사를 나눕니다. 새 이름을 정할 때는 규약 원문에 같은 뜻의 이름이 있는지 먼저 확인합니다.
 - 토큰과 비용은 chat span에만 적습니다. 비용 장부는 거기서 뽑는 집계입니다 (`ocr_harness.ledger`).
 - 추적 기록에는 원문을 넣지 않습니다. 해시와 참조만 두고 원문은 저장소 밖 rawPayload에 둡니다.
