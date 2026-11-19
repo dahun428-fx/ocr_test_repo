@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "eval_record",
+  "description": "조건 × 지표 × 필드 한 건의 채점 결과.",
+  "type": "object",
+  "properties": {
+    "eval_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "item_id": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "field_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "query_type": {
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "ocr_misread": {
+      "type": "boolean",
+      "description": "OCR 복원값이 정규화 후 정답과 다른 필드인지"
+    },
+    "dataset_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eval_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "condition": {
+      "enum": [
+        "C0",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "CK"
+      ]
+    },
+    "condition_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metric": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "enum": [
+        "before_postprocess",
+        "after_postprocess"
+      ]
+    },
+    "value": {
+      "type": "number"
+    },
+    "scorer_version": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "eval_id",
+    "run_id",
+    "trace_id",
+    "item_id",
+    "field_id",
+    "query_type",
+    "ocr_misread",
+    "dataset_version",
+    "eval_version",
+    "condition",
+    "condition_version",
+    "metric",
+    "stage",
+    "value",
+    "scorer_version"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "cost_ledger",
+  "description": "모델 호출 한 번(재시도 포함)의 사용량과 비용. 주 모델과 보조 모델을 따로 적습니다.",
+  "type": "object",
+  "properties": {
+    "ledger_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "condition": {
+      "enum": [
+        "C0",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "CK"
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "0이 첫 시도, 1 이상은 재시도"
+    },
+    "model_role": {
+      "enum": [
+        "main",
+        "auxiliary"
+      ]
+    },
+    "auth_route": {
+      "enum": [
+        "subscription_oauth",
+        "api_key",
+        "fake"
+      ]
+    },
+    "gen_ai.request.model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gen_ai.usage.input_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gen_ai.usage.output_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gen_ai.usage.cache_read.input_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gen_ai.usage.cache_creation.input_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "component_tokens": {
+      "type": "object",
+      "description": "하네스가 직접 센 구성요소별 토큰",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cost_usd_sdk_reported": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "구독에서는 청구액이 아닌 환산값"
+    },
+    "cost_usd_computed": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "price_table_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "error_code": {
+      "enum": [
+        "RATE_LIMITED",
+        "UPSTREAM_TIMEOUT",
+        "UPSTREAM_ERROR",
+        null
+      ]
+    },
+    "duration_ms": {
+      "type": "number",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "ledger_id",
+    "run_id",
+    "trace_id",
+    "idempotency_key",
+    "condition",
+    "attempt",
+    "model_role",
+    "auth_route",
+    "gen_ai.request.model",
+    "gen_ai.usage.input_tokens",
+    "gen_ai.usage.output_tokens",
+    "gen_ai.usage.cache_read.input_tokens",
+    "gen_ai.usage.cache_creation.input_tokens",
+    "component_tokens",
+    "cost_usd_sdk_reported",
+    "cost_usd_computed",
+    "price_table_version",
+    "error_code",
+    "duration_ms"
+  ],
+  "additionalProperties": false
+}
