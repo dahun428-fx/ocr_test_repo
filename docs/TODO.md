@@ -41,7 +41,9 @@ M0(저장소 골격, 스키마 2.0.0)과 M1a(탐색)는 끝났습니다. 내용�
 - [ ] 가짜 모델로 C0·C1 전 과정 통과
 - [ ] Haiku 개발용 기준 점수, 건당 토큰, 한도 소모 측정
 - [ ] Sonnet 50건으로 호출 안정성·비용 확인
-- [ ] 실제 추적 파일을 OTel 수집기와 가벼운 뷰어에 넣어 읽히는지 확인
+- [x] 추적 파일이 실제 뷰어에서 읽히는지 확인 (2026-11-19, Jaeger v2.23.0, 합성 1건. [HISTORY.md](HISTORY.md))
+- [ ] 객체를 담은 배열 속성(`gen_ai.retrieval.documents`, `ocr.postprocess.rules`)이 있는 span을 Jaeger 화면에서 누르면 화면이 꺼짐. 원인 확인(Jaeger 쪽 문제인지, 다른 뷰어에서도 그런지)과 대응 결정
+- [ ] 평가 이벤트 파일(`logs.jsonl`)을 받는 도구에 넣어 읽히는지 확인 (Jaeger는 추적만 받음)
 - [ ] M3 직전: Weaver 시험 (chat span 하나를 레지스트리로 옮겨 live-check까지, [open-source-adoption.md](open-source-adoption.md) 4절)
 - [ ] 오픈소스 후보 확인: `jiwer`, 필요하면 `tenacity`
 
