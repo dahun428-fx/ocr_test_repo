@@ -61,10 +61,11 @@ pytest -q
 | `model_route.py` | 모든 모델 호출이 지나는 한 곳 `ModelRoute`. 호출마다 chat span 하나를 남김. 가짜 모델 `FakeBackend`, 가격표 `PriceTable` | 백엔드(`ModelBackend` 상속)와 가격표 (값) |
 | `model_agent_sdk.py` | Claude Agent SDK 구독 인증 백엔드 (`AgentSdkBackend`). SDK가 설치되고 로그인된 PC에서만 동작 | 없음 |
 | `ocr_vision.py` | 이미지를 모델 경로로 보내 글자를 받는 OCR 엔진 (`VisionOcrEngine`) | 모델 이름, 프롬프트, 이미지 긴 변 (값) |
+| `degrade.py` | 이미지 열화 (`Degradation`과 자식 6종, 대조용 `Identity`)와 OCR 앞에 열화를 끼우는 `DegradedOcr` | 조건 목록 (값). 새 열화는 `Degradation`을 상속 |
 
 ### 이 연구의 설정 (`src/ocr_harness/project.py`)
 
-공용 틀에 이 연구의 이름을 끼우는 한 곳입니다. `PROFILE`, `SCHEMAS`, `TELEMETRY`, `LEDGER`, `GUARD`를 만들고, 거기에 묶인 함수를 내놓습니다: `validate`, `bundle`, `resource`, `tracer`, `logger`, `model_calls`, `item_id`, `find_violations`, `extract_fields`, `is_misread`. 모델 이름·프롬프트·가격표(`PRICES`, `VISION_OCR_*`)도 여기 있습니다. 나머지 코드와 테스트는 이 함수들을 부릅니다. 다른 프로젝트는 이 파일에 해당하는 것 하나와 자기 도메인 폴더만 새로 쓰면 됩니다.
+공용 틀에 이 연구의 이름을 끼우는 한 곳입니다. `PROFILE`, `SCHEMAS`, `TELEMETRY`, `LEDGER`, `GUARD`를 만들고, 거기에 묶인 함수를 내놓습니다: `validate`, `bundle`, `resource`, `tracer`, `logger`, `model_calls`, `item_id`, `find_violations`, `extract_fields`, `is_misread`. 모델 이름·프롬프트·가격표(`PRICES`, `VISION_OCR_*`), 제품 단위 분할(`split_of`), 열화 조건(`degradation_conditions`)도 여기 있습니다. 나머지 코드와 테스트는 이 함수들을 부릅니다. 다른 프로젝트는 이 파일에 해당하는 것 하나와 자기 도메인 폴더만 새로 쓰면 됩니다.
 
 ### 이 프로젝트 전용 코드 (`src/ocr_harness/pharma/`)
 
@@ -109,3 +110,5 @@ pytest -q
 | `tests/test_repo_guard.py` | 저장소 검사. 이 저장소의 추적 파일 전체도 검사 |
 | `tests/test_model_route.py` | 모델 호출 경로, 비전 OCR 엔진 (가짜 모델) |
 | `tools/ocr_vision_pilot.py` | Sonnet 비전 OCR 파일럿: 제품당 1장을 읽어 오인식 수와 토큰·비용 집계 (PC에서 실행, `--fake`는 어디서든) |
+| `tools/ocr_degradation.py` | 열화 조건마다 OCR 오인식 수 집계 (PC에서 실행, `--fake`는 어디서든) |
+| `tests/test_degrade.py` | 열화의 재현성·강도 순서, 제품 단위 분할 |

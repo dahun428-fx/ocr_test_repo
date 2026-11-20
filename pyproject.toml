@@ -17,7 +17,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+# 이미지를 다루는 부분(비전 OCR의 크기 줄이기, 열화)만 Pillow와 numpy를 씁니다.
+image = ["pillow>=10", "numpy>=1.26"]
+dev = ["pytest>=8", "pillow>=10", "numpy>=1.26"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

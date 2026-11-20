@@ -108,6 +108,47 @@ VISION_OCR_PROMPT = (
 # 이 모델에서 가장 좋은 크기인지는 확인하지 않았습니다. 바꿔 가며 비교할 수 있게 설정으로 둡니다.
 VISION_OCR_MAX_SIDE = 1568
 
+# 분할과 열화 조건 ---------------------------------------------------------
+
+# 제품을 개발용과 평가용으로 가르는 분할의 이름과 개발용 비율. 조건을 고르거나 튜닝하는 일은 개발용에서만 합니다.
+# 비율 0.5는 2026-11-20에 Claude가 잠정으로 둔 값입니다 (사용자가 정한 값이 아님). 평가셋을 동결하기 전에 확정합니다.
+SPLIT_SALT = "ocr-harness-split-1"
+DEV_SHARE = 0.5
+
+
+def split_of(product: str) -> str:
+    """제품 이름 → "dev" 또는 "eval". 같은 제품의 사진은 모두 같은 쪽에 갑니다."""
+    from ocr_harness.common.ids import hash_split
+
+    return hash_split(product, SPLIT_SALT, DEV_SHARE)
+
+
+def degradation_conditions() -> dict:
+    """열화 조건 이름 → 열화 객체. 종류 6개에 강도 3단계, 그리고 대조용 identity.
+
+    강도 값은 2026-11-20에 결과를 보기 전에 Claude가 정했습니다. 근거가 있는 값이 아니라
+    "약한 것부터 뚜렷이 나쁜 것까지"를 훑으려는 첫 눈금입니다. 실제로 쓸 조건은 개발용 제품의 결과로 고릅니다.
+    비율로 적은 값은 이미지 긴 변에 대한 비율입니다 (이 데이터의 긴 변은 약 2700~3500px).
+    함수로 둔 것은 Pillow와 numpy를 이 조건을 쓰는 실행에서만 불러오기 위해서입니다.
+    """
+    from ocr_harness.common.degrade import (
+        Downscale, GaussianBlur, Identity, JpegCompression, LowLight, MotionBlur, Rotation,
+    )
+
+    levels = {
+        "blur": [GaussianBlur(0.002), GaussianBlur(0.004), GaussianBlur(0.008)],
+        "motion": [MotionBlur(0.004), MotionBlur(0.008), MotionBlur(0.016)],
+        "lowres": [Downscale(800), Downscale(500), Downscale(320)],
+        "jpeg": [JpegCompression(20), JpegCompression(10), JpegCompression(5)],
+        "lowlight": [LowLight(0.5, 8), LowLight(0.3, 16), LowLight(0.15, 32)],
+        "rotate": [Rotation(5), Rotation(10), Rotation(20)],
+    }
+    conditions = {"identity": Identity()}
+    for kind, steps in levels.items():
+        for level, degradation in enumerate(steps, 1):
+            conditions[f"{kind}-{level}"] = degradation
+    return conditions
+
 # id ----------------------------------------------------------------------
 
 

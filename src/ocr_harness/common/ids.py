@@ -48,3 +48,16 @@ def content_digest(content) -> str:
     if isinstance(content, str):
         return _sha256(content.encode("utf-8"))
     return _sha256(canonical_json(content))
+
+
+def hash_split(key: str, salt: str, dev_share: float) -> str:
+    """열쇠 하나를 개발용("dev")과 평가용("eval") 중 한쪽에 고정합니다.
+
+    열쇠의 해시만 보고 정하므로 다른 항목이 늘거나 줄어도 자리가 바뀌지 않습니다
+    (새 데이터가 와도 기존 제품이 개발용과 평가용 사이를 옮기지 않게 하려는 것).
+    분할 단위(이 연구에서는 제품)를 열쇠로 넘기면 한 단위의 사진이 양쪽에 걸치지 않습니다.
+    salt는 분할의 이름입니다. 바꾸면 전혀 다른 분할이 되므로 한 번 정하면 바꾸지 않습니다.
+    """
+    value = int.from_bytes(hashlib.sha256(f"{salt}|{key}".encode("utf-8")).digest()[:8], "big")
+    # 해시 앞 8바이트를 0 이상 1 미만의 수로 봅니다.
+    return "dev" if value / 2**64 < dev_share else "eval"
